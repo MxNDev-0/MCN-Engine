@@ -7,91 +7,104 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   collection,
-  addDoc
+  addDoc,
+  db
 } from "./firebase.js";
 
-// POPUP
+/* POPUP */
 function show(msg){
-  const p=document.getElementById("popup");
-  p.innerText=msg;
-  p.style.display="block";
+  const p = document.getElementById("popup");
+  p.innerText = msg;
+  p.style.display = "block";
   setTimeout(()=>p.style.display="none",3000);
 }
 
-// MODALS
+/* MODALS */
 window.openRegister=()=>document.getElementById("registerModal").style.display="block";
 window.openLogin=()=>document.getElementById("loginModal").style.display="block";
 window.closeModal=(id)=>document.getElementById(id).style.display="none";
 
-// REGISTER
+/* REGISTER */
 window.register = async ()=>{
-  const email=document.getElementById("regEmail").value;
-  const pass=document.getElementById("regPassword").value;
-  const confirm=document.getElementById("regConfirm").value;
+  const email = document.getElementById("regEmail").value;
+  const pass = document.getElementById("regPassword").value;
+  const confirm = document.getElementById("regConfirm").value;
 
-  if(pass!==confirm){
+  if(pass !== confirm){
     show("Passwords do not match");
     return;
   }
 
   try{
-    const user=await createUserWithEmailAndPassword(auth,email,pass);
+    const user = await createUserWithEmailAndPassword(auth,email,pass);
     await sendEmailVerification(user.user);
-    show("Verification email sent!");
+    show("Account created! Check your email.");
   }catch(e){
     show(e.message);
   }
 };
 
-// LOGIN
+/* LOGIN (FIXED) */
 window.login = async ()=>{
   try{
-    const user=await signInWithEmailAndPassword(
+    const user = await signInWithEmailAndPassword(
       auth,
       document.getElementById("loginEmail").value,
       document.getElementById("loginPassword").value
     );
 
     if(!user.user.emailVerified){
-      show("Verify your email first");
-      return;
+      show("Email not verified (you can still continue)");
     }
 
   }catch(e){
-    show("Invalid login");
+    show("Wrong login details");
   }
 };
 
-// SESSION
+/* SESSION */
 onAuthStateChanged(auth,(user)=>{
-  if(user && user.emailVerified){
+  if(user){
     document.getElementById("dashboard").style.display="block";
+  } else {
+    document.getElementById("dashboard").style.display="none";
   }
 });
 
-// LOGOUT
-window.logout=()=>signOut(auth);
+/* LOGOUT */
+window.logout = ()=>signOut(auth);
 
-// RESET
-window.resetPassword=async ()=>{
-  const email=document.getElementById("loginEmail").value;
+/* RESET */
+window.resetPassword = async ()=>{
+  const email = document.getElementById("loginEmail").value;
   await sendPasswordResetEmail(auth,email);
   show("Reset email sent");
 };
 
-// LINKS
-window.openLink=(type)=>{
-  if(type==="earn"){
-    window.open("https://forfans.me/chichiguy");
-  }
-  if(type==="float"){
-    window.open("https://ff.io/?ref=s1nep47a");
+/* RESEND */
+window.resendVerification = async ()=>{
+  const user = auth.currentUser;
+  if(user){
+    await sendEmailVerification(user);
+    show("Verification email sent again!");
+  } else {
+    show("Login first");
   }
 };
 
-// MESSAGE
-window.sendMessage=async ()=>{
-  const msg=document.getElementById("message");
+/* LINKS */
+window.openLink = (type)=>{
+  if(type==="earn"){
+    window.open("https://forfans.me/chichiguy","_blank");
+  }
+  if(type==="float"){
+    window.open("https://ff.io/?ref=s1nep47a","_blank");
+  }
+};
+
+/* MESSAGE */
+window.sendMessage = async ()=>{
+  const msg = document.getElementById("message");
 
   if(!msg.value){
     show("Empty message");
@@ -99,18 +112,26 @@ window.sendMessage=async ()=>{
   }
 
   await addDoc(collection(db,"messages"),{
-    text:msg.value
+    text: msg.value,
+    time: new Date()
   });
 
   msg.value="";
   show("Message sent!");
 };
 
-// IMAGE (LOCAL PREVIEW)
-window.uploadImage=()=>{
-  const file=document.getElementById("imgUpload").files[0];
-  const img=document.createElement("img");
-  img.src=URL.createObjectURL(file);
-  img.style.width="100px";
+/* IMAGE PREVIEW */
+window.uploadImage = ()=>{
+  const file = document.getElementById("imgUpload").files[0];
+  if(!file) return;
+
+  const img = document.createElement("img");
+  img.src = URL.createObjectURL(file);
+  img.style.width = "100px";
+  img.style.margin="5px";
+
   document.getElementById("gallery").appendChild(img);
 };
+
+/* PREMIUM */
+window.premium = ()=>alert("Coming soon 🚧");
