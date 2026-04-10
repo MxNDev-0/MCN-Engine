@@ -5,155 +5,110 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  sendPasswordResetEmail,
   doc,
   setDoc,
   getDoc,
-  collection,
   addDoc,
-  getDocs,
-  query,
-  orderBy
+  collection
 } from "./firebase.js";
 
+// POPUP
+function show(msg){
+  const p = document.getElementById("popup");
+  p.innerText = msg;
+  p.style.display="block";
+  setTimeout(()=>p.style.display="none",3000);
+}
+
 // REGISTER
-window.register = async function () {
-  const firstName = document.getElementById("firstName").value;
-  const surname = document.getElementById("surname").value;
+window.register = async () => {
   const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const confirmPassword = document.getElementById("confirmPassword").value;
-  const error = document.getElementById("error");
+  const pass = document.getElementById("password").value;
+  const confirm = document.getElementById("confirmPassword").value;
 
-  error.textContent = "";
-
-  if (!firstName || !surname || !email || !password || !confirmPassword) {
-    error.textContent = "All fields are required!";
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    error.textContent = "Passwords do not match!";
-    return;
-  }
-
-  if (password.length < 6) {
-    error.textContent = "Password must be at least 6 characters.";
+  if(pass !== confirm){
+    show("Passwords do not match");
     return;
   }
 
   try {
-    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-
-    await setDoc(doc(db, "users", userCred.user.uid), {
-      firstName,
-      surname,
-      email,
-      isAdmin: false
+    const user = await createUserWithEmailAndPassword(auth,email,pass);
+    await setDoc(doc(db,"users",user.user.uid),{
+      email
     });
-
-  } catch (err) {
-    error.textContent = err.message;
+    show("Account created!");
+  } catch(e){
+    show(e.message);
   }
 };
 
 // LOGIN
-window.login = async function () {
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
-  const error = document.getElementById("error");
-
-  error.textContent = "";
-
+window.login = async () => {
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-  } catch (err) {
-    if (err.code === "auth/user-not-found") {
-      error.textContent = "User not found.";
-    } else if (err.code === "auth/wrong-password") {
-      error.textContent = "Incorrect password.";
-    } else {
-      error.textContent = err.message;
-    }
+    await signInWithEmailAndPassword(
+      auth,
+      document.getElementById("loginEmail").value,
+      document.getElementById("loginPassword").value
+    );
+  } catch(e){
+    show("Wrong login details");
   }
 };
 
-// LOGOUT
-window.logout = function () {
-  signOut(auth);
-};
-
-// RESET PASSWORD
-window.resetPassword = async function () {
-  const email = document.getElementById("loginEmail").value;
-
-  if (!email) {
-    alert("Enter your email first.");
-    return;
-  }
-
-  try {
-    await sendPasswordResetEmail(auth, email);
-    alert("Password reset link sent!");
-  } catch (err) {
-    alert(err.message);
-  }
-};
-
-// SESSION (NO AUTO LOGOUT)
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    document.getElementById("auth").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-
-    const docSnap = await getDoc(doc(db, "users", user.uid));
-
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-
-      document.getElementById("welcome").innerText =
-        "Welcome " + data.firstName;
-
-      if (data.isAdmin === true) {
-        document.getElementById("adminPanel").style.display = "block";
-      }
-    }
-
+// SESSION
+onAuthStateChanged(auth,(user)=>{
+  if(user){
+    document.getElementById("auth").style.display="none";
+    document.getElementById("dashboard").style.display="block";
   } else {
-    document.getElementById("auth").style.display = "block";
-    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("auth").style.display="block";
+    document.getElementById("dashboard").style.display="none";
   }
 });
 
-// SEND MESSAGE
-window.sendMessage = async function () {
-  const msg = document.getElementById("message").value;
-  const user = auth.currentUser;
+// LOGOUT
+window.logout = ()=> signOut(auth);
 
-  if (!msg) {
-    alert("Message cannot be empty");
+// MODAL
+let link="";
+window.openModal = (type)=>{
+  const m = document.getElementById("modal");
+
+  if(type==="earn"){
+    document.getElementById("modalTitle").innerText="Free Earning Platform";
+    document.getElementById("modalText").innerText="Earn money without investment.";
+    link="https://forfans.me/chichiguy";
+  }
+
+  if(type==="float"){
+    document.getElementById("modalTitle").innerText="FixedFloat";
+    document.getElementById("modalText").innerText="Instant crypto exchange.";
+    link="https://ff.io/?ref=s1nep47a";
+  }
+
+  m.style.display="block";
+};
+
+window.closeModal = ()=> document.getElementById("modal").style.display="none";
+window.goLink = ()=> window.open(link,"_blank");
+
+// MESSAGE
+window.sendMessage = async ()=>{
+  const msg = document.getElementById("message");
+
+  if(!msg.value){
+    show("Empty message");
     return;
   }
 
-  await addDoc(collection(db, "messages"), {
-    text: msg,
-    email: user.email,
-    createdAt: new Date()
+  await addDoc(collection(db,"messages"),{
+    text:msg.value,
+    time:new Date()
   });
 
-  alert("Message sent!");
+  msg.value="";
+  show("Message sent!");
 };
 
-// LOAD MESSAGES (ADMIN)
-window.loadMessages = async function () {
-  const box = document.getElementById("messages");
-  box.innerHTML = "";
-
-  const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
-
-  snapshot.forEach(doc => {
-    const m = doc.data();
-    box.innerHTML += `<p><b>${m.email}</b>: ${m.text}</p>`;
-  });
-};
+// PREMIUM
+window.premium = ()=> alert("Coming soon 🚧");
