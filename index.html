@@ -6,204 +6,146 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  font-family: Arial;
-  background:#0b132b;
-  color:white;
-  text-align:center;
-  padding:20px;
+body{font-family:Arial;background:#0b132b;color:white;margin:0}
+
+/* NAV */
+nav{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  padding:10px;
+  background:#111a33;
 }
+nav button{
+  background:gold;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+}
+
+/* SECTIONS */
+.section{display:none;padding:20px}
+.active{display:block}
 
 /* HERO */
-.hero {
-  max-width:520px;
-  margin:auto;
-  padding:25px;
-  background:#1c2541;
-  border-radius:14px;
-  position:relative;
-}
-
-/* BETA LEFT */
-.beta {
-  position:absolute;
-  left:10px;
-  top:10px;
-  background:#00c853;
-  color:black;
-  padding:4px 8px;
-  border-radius:6px;
-  font-size:12px;
-}
-
-/* LOGO */
-.logo {
-  width:70px;
-  height:70px;
-  margin:auto;
-  border-radius:50%;
-  background:gold;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:black;
-  font-weight:bold;
-}
-
-/* TITLE */
-.hero h1 {
-  margin-top:10px;
-  font-size:26px;
-  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-/* BUTTONS */
-button {
-  padding:12px;
-  margin:8px;
-  border-radius:6px;
-  border:none;
-  background:gold;
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-}
+.hero{text-align:center;padding:30px}
 
 /* DASHBOARD */
-#dashboard { display:none; }
-
-/* CARDS */
-.card {
+.card{
   background:#1c2541;
-  padding:18px;
-  margin:15px auto;
-  border-radius:12px;
-  max-width:520px;
+  padding:15px;
+  margin:10px auto;
+  max-width:500px;
+  border-radius:10px;
 }
 
 /* MODAL */
-.modal {
+.modal{
   display:none;
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.8);
 }
-
-.modal-content {
+.modal-content{
   background:#1c2541;
-  padding:20px;
-  border-radius:12px;
-  max-width:400px;
   margin:10% auto;
+  padding:20px;
+  max-width:400px;
+  border-radius:10px;
 }
-
-/* INPUT */
-input, textarea {
+input,textarea{
   width:90%;
   padding:10px;
-  margin:6px;
-  border-radius:6px;
-  border:none;
+  margin:5px;
 }
-
-/* POPUP */
-.popup {
-  display:none;
-  position:fixed;
-  top:40%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:red;
-  padding:15px;
-  border-radius:8px;
-  z-index:999;
-}
+button{cursor:pointer}
 </style>
 </head>
 
 <body>
 
-<!-- HERO -->
+<!-- NAV -->
+<nav>
+<button onclick="showPage('home')">Home</button>
+<button onclick="showPage('about')">About</button>
+<button onclick="showPage('faq')">FAQ</button>
+<button onclick="showPage('support')">Support</button>
+<button onclick="showPage('settings')">Settings</button>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="section active">
 <div class="hero">
-  <span class="beta">BETA</span>
+<h1>MXM Crypto Empire</h1>
+<p>Trusted crypto earning & exchange guide platform</p>
 
-  <div class="logo">MXM</div>
-
-  <h1>MXM Crypto Empire</h1>
-
-  <button onclick="openRegister()">Register</button>
-  <button onclick="openLogin()">Login</button>
+<button onclick="openAuth('login')">Login</button>
+<button onclick="openAuth('register')">Register</button>
 </div>
 
-<!-- REGISTER -->
-<div class="modal" id="registerModal">
-<div class="modal-content">
-<h3>Create Account</h3>
-<input id="regEmail" placeholder="Email">
-<input id="regPassword" type="password" placeholder="Password">
-<input id="regConfirm" type="password" placeholder="Confirm Password">
-
-<button onclick="register()">Register</button>
-<button onclick="closeModal('registerModal')">Close</button>
-</div>
+<p>🟢 Users Online: <span id="onlineCount">0</span></p>
 </div>
 
-<!-- LOGIN -->
-<div class="modal" id="loginModal">
-<div class="modal-content">
-<h3>Login</h3>
-<input id="loginEmail" placeholder="Email">
-<input id="loginPassword" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
-<button onclick="resetPassword()">Forgot Password</button>
-<button onclick="resendVerification()">Resend Verification</button>
-<button onclick="closeModal('loginModal')">Close</button>
+<!-- ABOUT -->
+<div id="about" class="section">
+<h2>About</h2>
+<p>This platform provides verified crypto earning tools, exchange guides, and platform reviews.</p>
+<p><b>Disclaimer:</b> We do not own external platforms. No financial advice is given.</p>
 </div>
+
+<!-- FAQ -->
+<div id="faq" class="section">
+<h2>FAQ</h2>
+<p>Q: Is this financial advice?<br>A: No.</p>
+</div>
+
+<!-- SUPPORT -->
+<div id="support" class="section">
+<h2>Support</h2>
+<textarea id="msg"></textarea>
+<button onclick="sendMsg()">Send</button>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="section">
+<h2>Settings</h2>
+<input id="newName" placeholder="Change username">
+<button onclick="changeName()">Update</button>
+<br><br>
+<button onclick="resetPass()">Reset Password</button>
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboard">
-
-<h2>Dashboard</h2>
+<div id="dashboard" class="section">
 
 <div class="card">
-<h3>💰 Free Earning Platform</h3>
-<button onclick="openLink('earn')">Start</button>
+<h3>Free Earning Platform</h3>
+<button onclick="openPlatform('earn')">View</button>
 </div>
 
 <div class="card">
-<h3>💱 FixedFloat Exchange</h3>
-<button onclick="openLink('float')">Open</button>
+<h3>FixedFloat Exchange</h3>
+<button onclick="openPlatform('float')">View</button>
 </div>
 
 <div class="card">
-<h3>📸 Proof Images</h3>
-<input type="file" id="imgUpload">
-<button onclick="uploadImage()">Upload</button>
-<div id="gallery"></div>
+<h3>Portfolio Proof</h3>
+<button onclick="openPortfolio()">View Gallery</button>
 </div>
 
-<div class="card">
-<h3>📩 Contact Admin</h3>
-<textarea id="message"></textarea><br>
-<button onclick="sendMessage()">Send</button>
+<button onclick="logout()">Logout</button>
 </div>
 
-<div class="card">
-<h3>🔒 Premium</h3>
-<button onclick="premium()">Open</button>
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-content">
+<p id="modalText"></p>
+<button onclick="confirmGo()">Continue</button>
+<button onclick="closeModal()">Cancel</button>
 </div>
-
-<button onclick="logout()" style="background:red;color:white;">Logout</button>
-
 </div>
-
-<div id="popup" class="popup"></div>
 
 <script type="module" src="app.js"></script>
 
 </body>
-</html>
+  </html>
