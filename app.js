@@ -1,5 +1,22 @@
+import {
+  auth,
+  db,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy
+} from "./firebase.js";
+
 // REGISTER
-function register(){
+window.register = async function () {
   const firstName = document.getElementById("firstName").value;
   const surname = document.getElementById("surname").value;
   const email = document.getElementById("email").value;
@@ -9,53 +26,61 @@ function register(){
 
   error.textContent = "";
 
-  if(password !== confirmPassword){
+  if (password !== confirmPassword) {
     error.textContent = "Passwords do not match!";
     return;
   }
 
-  auth.createUserWithEmailAndPassword(email, password)
-  .then(userCred => {
-    return db.collection("users").doc(userCred.user.uid).set({
+  try {
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+
+    await setDoc(doc(db, "users", userCred.user.uid), {
       firstName,
       surname,
       email,
-      isAdmin:false
+      isAdmin: false
     });
-  })
-  .catch(err => error.textContent = err.message);
-}
+
+  } catch (err) {
+    error.textContent = err.message;
+  }
+};
 
 // LOGIN
-function login(){
+window.login = async function () {
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
 
-  auth.signInWithEmailAndPassword(email, password)
-  .catch(err => document.getElementById("error").textContent = err.message);
-}
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    document.getElementById("error").textContent = err.message;
+  }
+};
 
 // LOGOUT
-function logout(){
-  auth.signOut();
-}
+window.logout = function () {
+  signOut(auth);
+};
 
-// KEEP USER LOGGED IN (FIXES YOUR MAIN PROBLEM)
-auth.onAuthStateChanged(user => {
-  if(user){
+// SESSION FIX (NO MORE AUTO LOGOUT)
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
     document.getElementById("auth").style.display = "none";
     document.getElementById("dashboard").style.display = "block";
 
-    db.collection("users").doc(user.uid).get().then(doc=>{
-      const data = doc.data();
+    const docSnap = await getDoc(doc(db, "users", user.uid));
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+
       document.getElementById("welcome").innerText =
         "Welcome " + data.firstName;
 
-      // ADMIN CHECK
-      if(data.isAdmin === true){
+      if (data.isAdmin === true) {
         document.getElementById("adminPanel").style.display = "block";
       }
-    });
+    }
 
   } else {
     document.getElementById("auth").style.display = "block";
@@ -64,29 +89,29 @@ auth.onAuthStateChanged(user => {
 });
 
 // SEND MESSAGE
-function sendMessage(){
+window.sendMessage = async function () {
   const msg = document.getElementById("message").value;
   const user = auth.currentUser;
 
-  db.collection("messages").add({
+  await addDoc(collection(db, "messages"), {
     text: msg,
     email: user.email,
     createdAt: new Date()
-  }).then(()=>{
-    alert("Message sent!");
   });
-}
 
-// ADMIN: VIEW MESSAGES
-function loadMessages(){
+  alert("Message sent!");
+};
+
+// ADMIN LOAD MESSAGES
+window.loadMessages = async function () {
   const box = document.getElementById("messages");
   box.innerHTML = "";
 
-  db.collection("messages").orderBy("createdAt","desc").get()
-  .then(snapshot=>{
-    snapshot.forEach(doc=>{
-      const m = doc.data();
-      box.innerHTML += `<p><b>${m.email}</b>: ${m.text}</p>`;
-    });
+  const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+
+  snapshot.forEach(doc => {
+    const m = doc.data();
+    box.innerHTML += `<p><b>${m.email}</b>: ${m.text}</p>`;
   });
-        }
+};
