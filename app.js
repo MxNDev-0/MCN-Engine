@@ -9,49 +9,49 @@ import {
   collection
 } from "./firebase.js";
 
-let currentUser = null;
+let user = null;
 
-/* AUTH */
-window.register = async ()=>{
-  const email = prompt("Email");
-  const pass = prompt("Password");
+/* SIGNUP */
+window.signup = async ()=>{
+  const email = document.getElementById("signupEmail").value;
+  const pass = document.getElementById("signupPass").value;
 
-  const user = await createUserWithEmailAndPassword(auth,email,pass);
-
-  // create user profile in database
-  await addDoc(collection(db,"users"),{
-    uid:user.user.uid,
-    email:user.user.email,
-    role:"user",
-    createdAt:new Date()
-  });
-
-  alert("Registered");
+  try{
+    await createUserWithEmailAndPassword(auth,email,pass);
+    alert("Account created successfully");
+  }catch(e){
+    alert(e.message);
+  }
 };
 
+/* LOGIN */
 window.login = async ()=>{
-  const email = prompt("Email");
-  const pass = prompt("Password");
+  const email = document.getElementById("loginEmail").value;
+  const pass = document.getElementById("loginPass").value;
 
-  await signInWithEmailAndPassword(auth,email,pass);
-
-  alert("Logged in");
+  try{
+    await signInWithEmailAndPassword(auth,email,pass);
+    alert("Login successful");
+  }catch(e){
+    alert("Wrong login details");
+  }
 };
 
-/* SESSION */
-onAuthStateChanged(auth,(user)=>{
-  currentUser = user;
+/* SESSION CONTROL (IMPORTANT FIX) */
+onAuthStateChanged(auth,(u)=>{
+  user = u;
 
-  if(user){
+  if(u){
     document.getElementById("dashboard").style.display="block";
   }else{
     document.getElementById("dashboard").style.display="none";
   }
 });
 
-/* AFFILIATE TRACKING */
+/* TRACK CLICK (AFFILIATE SYSTEM BASE) */
 window.trackClick = async (type)=>{
-  if(!currentUser){
+
+  if(!user){
     alert("Login required");
     return;
   }
@@ -66,12 +66,11 @@ window.trackClick = async (type)=>{
     link = "https://ff.io/?ref=s1nep47a";
   }
 
-  // log click to Firestore
   await addDoc(collection(db,"clicks"),{
-    uid: currentUser.uid,
+    uid:user.uid,
     type,
     link,
-    time: new Date()
+    time:new Date()
   });
 
   window.open(link,"_blank");
