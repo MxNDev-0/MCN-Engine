@@ -23,22 +23,34 @@ body {
   border-radius:14px;
 }
 
-/* TITLE */
+.logo {
+  font-size:20px;
+  font-weight:bold;
+  color:gold;
+}
+
 .hero h2 {
-  font-size:32px;
+  font-size:28px;
   background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
   -webkit-background-clip: text;
   color: transparent;
 }
 
-/* BETA BADGE */
 .beta {
-  color:black;
   background:gold;
+  color:black;
   padding:3px 8px;
   border-radius:6px;
   font-size:12px;
-  margin-right:6px;
+}
+
+/* INPUTS */
+input {
+  padding:10px;
+  margin:6px;
+  border-radius:6px;
+  border:none;
+  width:80%;
 }
 
 /* BUTTONS */
@@ -53,17 +65,27 @@ button {
   cursor:pointer;
 }
 
-button:hover {
-  background:#f7b500;
-}
+/* DASHBOARD */
+#dashboard { display:none; }
 
-/* CARD */
 .card {
   background:#1c2541;
   padding:15px;
   margin:15px auto;
   border-radius:10px;
   max-width:520px;
+}
+
+/* POPUP */
+.popup {
+  display:none;
+  position:fixed;
+  top:40%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:red;
+  padding:15px;
+  border-radius:8px;
 }
 
 /* MODAL */
@@ -80,33 +102,8 @@ button:hover {
   border-radius:10px;
   max-width:400px;
   margin:10% auto;
-  text-align:left;
 }
 
-/* ERROR POPUP */
-#errorPopup {
-  display:none;
-  position:fixed;
-  top:40%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:red;
-  padding:15px;
-  border-radius:8px;
-  z-index:999;
-}
-
-/* NAV */
-nav button {
-  margin:5px;
-}
-
-/* FOOTER */
-footer {
-  margin-top:30px;
-  font-size:12px;
-  opacity:0.6;
-}
 </style>
 </head>
 
@@ -114,150 +111,75 @@ footer {
 
 <!-- HERO -->
 <div class="hero">
+  <div class="logo">💠 MXM</div>
   <span class="beta">BETA</span>
   <h2>MXM Crypto Empire</h2>
-  <p>Discover legit platforms to earn and use crypto tools.</p>
 </div>
 
-<!-- NAV -->
-<nav>
-  <button onclick="scrollToSection('home')">Home</button>
-  <button onclick="scrollToSection('about')">About</button>
-  <button onclick="scrollToSection('faq')">FAQ</button>
-  <button onclick="scrollToSection('contact')">Support</button>
-</nav>
+<!-- AUTH -->
+<div id="auth">
 
-<!-- HOME -->
-<div id="home">
+<h3>Register</h3>
+<input id="firstName" placeholder="First Name"><br>
+<input id="lastName" placeholder="Last Name"><br>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
+<input id="confirmPassword" type="password" placeholder="Confirm Password"><br>
+
+<button onclick="register()">Register</button>
+
+<h3>Login</h3>
+<input id="loginEmail" placeholder="Email"><br>
+<input id="loginPassword" type="password" placeholder="Password"><br>
+
+<button onclick="login()">Login</button>
+
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+<h2>Dashboard</h2>
 
 <div class="card">
 <h3>💰 Free Earning Platform</h3>
-<p>Earn money online without investment.</p>
-<button onclick="openModal('earn')">Start Earning</button>
+<button onclick="openModal('earn')">Start</button>
 </div>
 
 <div class="card">
 <h3>💱 FixedFloat Exchange</h3>
-<p>Instant crypto exchange (no account required).</p>
-<button onclick="openModal('float')">Open Exchange</button>
+<button onclick="openModal('float')">Open</button>
 </div>
 
 <div class="card">
-<h3>🔒 Premium</h3>
-<button onclick="openPremium()">Go to Premium</button>
-</div>
-
-</div>
-
-<!-- ABOUT -->
-<div id="about" class="card">
-<h3>About</h3>
-<p>
-This website is created to help users discover legitimate platforms that can be used
-to earn money online and perform crypto transactions like instant exchanges.
-
-All platforms listed here are tools and services we have tested or researched.
-</p>
-</div>
-
-<!-- FAQ -->
-<div id="faq" class="card">
-<h3>FAQ</h3>
-<p><b>Is this free?</b> — Yes, most platforms are free.</p>
-<p><b>Do you guarantee earnings?</b> — No.</p>
-</div>
-
-<!-- CONTACT -->
-<div id="contact" class="card">
-<h3>Contact Admin</h3>
+<h3>📩 Contact Admin</h3>
 <textarea id="message"></textarea><br>
 <button onclick="sendMessage()">Send</button>
 </div>
 
-<!-- POPUP -->
+<div class="card">
+<h3>🔒 Premium</h3>
+<button onclick="premium()">Open</button>
+</div>
+
+<button onclick="logout()" style="background:red;color:white;">Logout</button>
+
+</div>
+
+<!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-content">
 <h3 id="modalTitle"></h3>
 <p id="modalText"></p>
 <button onclick="goLink()">Continue</button>
-<button onclick="closeModal()" style="background:red;color:white;">Cancel</button>
+<button onclick="closeModal()">Cancel</button>
 </div>
 </div>
 
-<!-- ERROR -->
-<div id="errorPopup"></div>
+<!-- POPUP -->
+<div id="popup" class="popup"></div>
 
-<!-- FOOTER -->
-<footer>
-© <span id="year"></span> MXM Crypto Empire <br><br>
-
-⚠ Disclaimer:  
-This website does not own or control any external platforms listed.  
-We are not responsible for your actions or results.  
-This content is for educational purposes only and not financial advice.
-</footer>
-
-<script>
-document.getElementById("year").innerText = new Date().getFullYear();
-
-function scrollToSection(id){
-  document.getElementById(id).scrollIntoView({behavior:"smooth"});
-}
-
-let currentLink = "";
-
-function openModal(type){
-  const modal = document.getElementById("modal");
-
-  if(type === "earn"){
-    document.getElementById("modalTitle").innerText = "Free Earning Platform";
-    document.getElementById("modalText").innerText =
-    "This platform allows users to earn money online through available opportunities. It does not involve crypto trading. Make sure to follow instructions carefully on the platform.";
-    currentLink = "https://forfans.me/chichiguy";
-  }
-
-  if(type === "float"){
-    document.getElementById("modalTitle").innerText = "FixedFloat Exchange";
-    document.getElementById("modalText").innerText =
-    "FixedFloat is an instant cryptocurrency exchange. You can swap coins quickly without creating an account. Always double-check wallet addresses before confirming transactions.";
-    currentLink = "https://ff.io/?ref=s1nep47a";
-  }
-
-  modal.style.display = "block";
-}
-
-function closeModal(){
-  document.getElementById("modal").style.display="none";
-}
-
-function goLink(){
-  window.open(currentLink,"_blank");
-}
-
-function openPremium(){
-  alert("Premium page coming soon 🚧");
-}
-
-function sendMessage(){
-  const msg = document.getElementById("message");
-
-  if(!msg.value){
-    showError("Message cannot be empty");
-    return;
-  }
-
-  alert("Message sent!");
-  msg.value = ""; // CLEAR TEXT ✅
-}
-
-function showError(text){
-  const box = document.getElementById("errorPopup");
-  box.innerText = text;
-  box.style.display="block";
-
-  setTimeout(()=>{ box.style.display="none"; },3000);
-}
-</script>
+<script type="module" src="app.js"></script>
 
 </body>
 </html>
