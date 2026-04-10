@@ -5,8 +5,6 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  sendEmailVerification,
-  sendPasswordResetEmail,
   updateProfile
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -16,7 +14,7 @@ import {
   addDoc,
   doc,
   setDoc,
-  onSnapshot
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -38,12 +36,10 @@ export {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  sendEmailVerification,
-  sendPasswordResetEmail,
   updateProfile,
   collection,
   addDoc,
   doc,
   setDoc,
-  onSnapshot
+  getDoc
 };
