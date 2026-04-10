@@ -30,16 +30,23 @@
       margin-top: 20px;
     }
 
-    .premium {
+    .card {
       margin-top: 20px;
       padding: 15px;
-      background: #1c2541;
       border-radius: 10px;
+    }
+
+    .free {
+      background: #1c2541;
+    }
+
+    .premium {
+      background: #3a0ca3;
     }
 
     .pay-btn {
       display: inline-block;
-      background: green;
+      background: #00c853;
       color: white;
       padding: 12px 18px;
       border-radius: 6px;
@@ -76,42 +83,64 @@
 <!-- 📊 DASHBOARD -->
 <div id="dashboard">
 
-  <h2>Dashboard</h2>
+  <h2>📊 Dashboard</h2>
   <p>You are logged in 👋</p>
 
-  <h3>Crypto Tool</h3>
-  <a href="https://ff.io/?ref=s1nep47a" target="_blank">
-    FixedFloat Exchange
-  </a>
+  <!-- 🆓 FREE SECTION -->
+  <div class="card free">
+    <h3>🆓 Free Tools</h3>
+    <p>Access basic crypto exchange:</p>
 
-  <!-- 💳 PREMIUM SECTION -->
-  <div class="premium" id="premiumBox">
-
-    <h3>💳 Upgrade to Premium</h3>
-    <p>Unlock premium tools, AI features, and advanced crypto insights.</p>
-
-    <a href="https://nowpayments.io/payment/?iid=5153003613"
-       target="_blank"
-       class="pay-btn">
-      🚀 Pay with Crypto (USDT BSC)
+    <a href="https://ff.io/?ref=s1nep47a" target="_blank">
+      🔗 Use FixedFloat Exchange
     </a>
+  </div>
 
-    <br><br>
+  <!-- 💎 PREMIUM SECTION -->
+  <div class="card premium">
 
-    <button onclick="showPremiumContent()" style="background:#00c853;color:white;">
-      I already paid (Unlock features)
-    </button>
+    <h3>💎 Premium Tools</h3>
+    <p>Unlock powerful AI + advanced crypto features:</p>
 
-    <!-- 🔥 PREMIUM FEATURES -->
+    <!-- 🔒 LOCKED VIEW -->
+    <div id="premiumLocked">
+
+      <ul style="list-style:none;padding:0;opacity:0.7;">
+        <li>🔒 AI Crypto Signals</li>
+        <li>🔒 Market Predictions</li>
+        <li>🔒 Auto Trading Tools</li>
+        <li>🔒 VIP Strategies</li>
+      </ul>
+
+      <p style="color:#ffd60a;">Upgrade to unlock everything 🚀</p>
+
+      <a href="https://nowpayments.io/payment/?iid=5153003613"
+         target="_blank"
+         class="pay-btn">
+        💳 Upgrade Now
+      </a>
+
+      <br><br>
+
+      <button onclick="unlockPremium()" style="background:#222;color:white;">
+        I already paid
+      </button>
+    </div>
+
+    <!-- 🔥 UNLOCKED PREMIUM -->
     <div id="premiumContent">
-      <h3>🔥 Premium Dashboard</h3>
-      <p>Welcome Premium User 🎉</p>
+
+      <h3>🔥 Welcome Premium User 🎉</h3>
 
       <ul style="list-style:none;padding:0;">
-        <li>✔ Advanced crypto tools</li>
-        <li>✔ AI insights (coming soon)</li>
-        <li>✔ Priority updates</li>
+        <li>✅ AI Crypto Signals</li>
+        <li>✅ Market Predictions</li>
+        <li>✅ Auto Trading Tools</li>
+        <li>✅ VIP Strategies</li>
       </ul>
+
+      <p style="color:#00ffcc;">You now have full access 🚀</p>
+
     </div>
 
   </div>
@@ -133,8 +162,9 @@ function signup() {
   showDashboard();
 }
 
-function showPremiumContent() {
+function unlockPremium() {
   document.getElementById("premiumContent").style.display = "block";
+  document.getElementById("premiumLocked").style.display = "none";
 }
 </script>
 
