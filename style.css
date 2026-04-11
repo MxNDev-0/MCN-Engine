@@ -1,24 +1,32 @@
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0b132b;
-  color:white;
-  text-align:center;
+body {
+  font-family: Arial;
+  background: #0b132b;
+  color: white;
+  text-align: center;
 }
 
-.box{
-  max-width:300px;
-  margin:100px auto;
+.auth-box, .post-box {
+  margin: 20px auto;
+  width: 300px;
 }
 
-input,button{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
+input, textarea {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
 }
 
-button{
-  background:gold;
-  border:none;
-  cursor:pointer;
+button {
+  padding: 10px;
+  margin: 5px;
+  background: #5bc0be;
+  border: none;
+  cursor: pointer;
+}
+
+.post {
+  background: #1c2541;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
 }
