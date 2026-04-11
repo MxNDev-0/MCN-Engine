@@ -4,14 +4,14 @@ import {
   onAuthStateChanged
 } from "./firebase.js";
 
-// 🔥 PROTECT DASHBOARD PAGE
+// 🔥 block access if not logged in
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "index.html";
   }
 });
 
-// LOGOUT
+// logout
 window.logout = async () => {
   await signOut(auth);
   window.location.href = "index.html";
