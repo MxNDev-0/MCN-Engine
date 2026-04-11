@@ -17,12 +17,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const ADMIN_EMAIL = "nc.maxiboro@gmail.com";
+const BACKEND_URL = "https://mxm-backend.onrender.com";
 
 const postsDiv = document.getElementById("posts");
 
-// ======================
-// AUTH + USER CREATE
-// ======================
+// ================= AUTH =================
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "index.html";
@@ -42,25 +41,46 @@ onAuthStateChanged(auth, async (user) => {
   loadPosts();
 });
 
-// ======================
-// NAV
-// ======================
+// ================= NAV =================
 window.logout = () => signOut(auth);
 window.goHome = () => loadPosts();
 window.goProfile = () => alert("Profile coming soon");
 
-// ======================
-// PREMIUM PAGE
-// ======================
-window.goPremium = function () {
-  alert("Premium is $15 USDT. Redirecting...");
+// ================= 💰 PREMIUM (FIXED) =================
+window.goPremium = async function () {
+  try {
+    const user = auth.currentUser;
 
-  window.open("https://nowpayments.io/payment/?iid=MXM_PREMIUM_15", "_blank");
+    if (!user) return alert("Login first");
+
+    alert("Creating payment...");
+
+    const res = await fetch(`${BACKEND_URL}/create-payment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        userId: user.uid
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.payment_url) {
+      alert("Payment failed ❌");
+      return;
+    }
+
+    window.location.href = data.payment_url;
+
+  } catch (err) {
+    console.error(err);
+    alert("Error connecting to server ❌");
+  }
 };
 
-// ======================
-// ADMIN PANEL
-// ======================
+// ================= ADMIN =================
 window.goAdmin = async function () {
   if (auth.currentUser.email !== ADMIN_EMAIL) {
     alert("Not admin ❌");
@@ -71,9 +91,7 @@ window.goAdmin = async function () {
   loadUsers();
 };
 
-// ======================
-// CREATE POST
-// ======================
+// ================= CREATE POST =================
 window.createPost = async function () {
   const text = document.getElementById("postText").value;
   const link = document.getElementById("postLink").value;
@@ -93,9 +111,7 @@ window.createPost = async function () {
   loadPosts();
 };
 
-// ======================
-// LOAD POSTS
-// ======================
+// ================= LOAD POSTS =================
 async function loadPosts() {
   postsDiv.innerHTML = "Loading...";
 
@@ -124,7 +140,7 @@ async function loadPosts() {
 
         ${locked ? `
           <button class="unlock-btn" onclick="goPremium()">
-            Unlock Premium
+            Unlock Premium 💎
           </button>
         ` : `
           <a href="${post.link}" target="_blank" onclick="trackClick('${id}')">
@@ -144,26 +160,18 @@ async function loadPosts() {
   });
 }
 
-// ======================
-// TRACK CLICK
-// ======================
+// ================= ACTIONS =================
 window.trackClick = async (id) => {
   const ref = doc(db, "posts", id);
   await updateDoc(ref, { clicks: increment(1) });
 };
 
-// ======================
-// LIKE
-// ======================
 window.likePost = async (id) => {
   const ref = doc(db, "posts", id);
   await updateDoc(ref, { likes: increment(1) });
   loadPosts();
 };
 
-// ======================
-// COMMENT
-// ======================
 window.addComment = async (id) => {
   const input = document.getElementById(`comment-${id}`);
   const text = input.value;
@@ -181,9 +189,7 @@ window.addComment = async (id) => {
   loadPosts();
 };
 
-// ======================
-// LOAD USERS (ADMIN)
-// ======================
+// ================= ADMIN USERS =================
 async function loadUsers() {
   const usersList = document.getElementById("usersList");
   usersList.innerHTML = "";
@@ -207,9 +213,6 @@ async function loadUsers() {
   });
 }
 
-// ======================
-// TOGGLE PREMIUM
-// ======================
 window.togglePremium = async function (id, status) {
   const ref = doc(db, "users", id);
 
