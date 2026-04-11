@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MXM Dashboard</title>
+  <title>MXM Crypto Empire</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <!-- NAVBAR -->
 <div class="navbar">
-  <h2>MXM Crypto Empire <span class="beta">BETA</span></h2>
+  <h2 class="logo">MXM Crypto Empire <span class="beta">BETA</span></h2>
 
   <div class="nav-links">
     <button onclick="goHome()">Home</button>
     <button onclick="goProfile()">Profile</button>
+    <button onclick="goAdmin()">Admin</button>
+    <button onclick="goPremium()">Unlock Premium 💎</button>
     <button onclick="logout()">Logout</button>
   </div>
 </div>
@@ -28,19 +30,20 @@
     <p>Top Post: <span id="topPost">None</span></p>
   </div>
 
-  <!-- POST BOX -->
-  <div class="post-box">
-    <textarea id="postText" placeholder="Write post..."></textarea>
-    <input id="postLink" placeholder="Link">
-
-    <label>
-      <input type="checkbox" id="isPremium">
-      Mark as Premium 💎
-    </label>
-
-    <button onclick="createPost()">Create Post</button>
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel" style="display:none;">
+    <h3>👑 Admin Dashboard</h3>
+    <div id="usersList"></div>
   </div>
 
+  <!-- POST BOX -->
+  <div class="post-box">
+    <textarea id="postText" placeholder="What's on your mind?"></textarea>
+    <input type="text" id="postLink" placeholder="Paste your link">
+    <button onclick="createPost()">Post</button>
+  </div>
+
+  <!-- POSTS -->
   <div id="posts"></div>
 
 </div>
