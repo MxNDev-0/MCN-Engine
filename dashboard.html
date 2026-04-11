@@ -2,46 +2,17 @@
 <html>
 <head>
 <title>Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0b132b;
-  color:white;
-}
-
-header{
-  padding:15px;
-  background:#1c2541;
-  display:flex;
-  justify-content:space-between;
-}
-
-.section{
-  padding:20px;
-}
-button{
-  background:gold;
-  border:none;
-  padding:10px;
-}
-.logout{
-  background:red;
-  color:white;
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <header>
   <h3>MXM Dashboard</h3>
-  <button class="logout" onclick="logout()">Logout</button>
+  <button onclick="logout()">Logout</button>
 </header>
 
-<div class="section">
+<div>
   <h2>Welcome 👋</h2>
 
   <button onclick="window.open('https://ff.io/?ref=s1nep47a')">
@@ -51,4 +22,4 @@ button{
 
 <script type="module" src="dashboard.js"></script>
 </body>
-  </html>
+</html>
