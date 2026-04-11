@@ -14,9 +14,9 @@ import {
 
 const chatBox = document.getElementById("chatBox");
 
-// ================= CHECK LOGIN =================
 let currentUser = null;
 
+// ================= AUTH =================
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "index.html";
@@ -37,15 +37,18 @@ window.sendMsg = async function () {
     text: msg,
     user: currentUser.email,
     uid: currentUser.uid,
-    time: serverTimestamp()
+    createdAt: serverTimestamp()
   });
 
   document.getElementById("msg").value = "";
 };
 
-// ================= LOAD REALTIME CHAT =================
+// ================= REAL-TIME CHAT =================
 function loadMessages() {
-  const q = query(collection(db, "messages"), orderBy("time"));
+  const q = query(
+    collection(db, "messages"),
+    orderBy("createdAt")
+  );
 
   onSnapshot(q, (snapshot) => {
     chatBox.innerHTML = "";
@@ -61,7 +64,10 @@ function loadMessages() {
           padding:10px;
           border-radius:10px;
           max-width:70%;
-          ${isMe ? "margin-left:auto;background:#5bc0be;color:black;" : "background:#0b132b;"}
+          word-wrap:break-word;
+          ${isMe 
+            ? "margin-left:auto;background:#5bc0be;color:black;" 
+            : "background:#0b132b;color:white;"}
         ">
           <b>${data.user}</b><br>
           ${data.text}
@@ -69,7 +75,6 @@ function loadMessages() {
       `;
     });
 
-    // auto scroll
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 }
