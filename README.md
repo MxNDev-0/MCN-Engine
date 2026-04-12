@@ -13,4 +13,4 @@ A simple monetized blog system built with Firebase.
 Use GitHub Pages
 
 ## Author
-MXM
+MxNDev-0
