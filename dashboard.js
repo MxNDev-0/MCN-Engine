@@ -20,16 +20,17 @@ const postsDiv = document.getElementById("posts");
 
 let currentUserData = null;
 
-// 🔥 AUTH CHECK (NO LOOP)
+// ✅ THIS STOPS ALL LOOPS COMPLETELY
+let hasInitialized = false;
+
 onAuthStateChanged(auth, async (user) => {
 
+  // 🔥 STOP MULTIPLE EXECUTION
+  if (hasInitialized) return;
+  hasInitialized = true;
+
   if (!user) {
-    // ⛔ ONLY redirect once after delay
-    setTimeout(() => {
-      if (!auth.currentUser) {
-        window.location.href = "index.html";
-      }
-    }, 1000);
+    window.location.replace("index.html"); // safer than href
     return;
   }
 
@@ -49,22 +50,22 @@ onAuthStateChanged(auth, async (user) => {
   loadPosts();
 });
 
-// LOGOUT
+// ================= LOGOUT =================
 window.logout = async () => {
   await signOut(auth);
-  window.location.href = "index.html";
+  window.location.replace("index.html");
 };
 
-// NAV
+// ================= NAV =================
 window.goHome = () => loadPosts();
 window.goProfile = () => window.location.href = "profile.html";
 
-// SUPPORT
+// ================= SUPPORT =================
 window.support = () => {
   window.open("https://nowpayments.io/payment/?iid=5153003613");
 };
 
-// CREATE POST
+// ================= CREATE POST =================
 window.createPost = async function () {
   const user = auth.currentUser;
   const text = document.getElementById("postText").value;
@@ -104,7 +105,7 @@ window.createPost = async function () {
   loadPosts();
 };
 
-// LOAD POSTS
+// ================= LOAD POSTS =================
 async function loadPosts() {
   const snapshot = await getDocs(collection(db, "posts"));
   postsDiv.innerHTML = "";
@@ -114,4 +115,15 @@ async function loadPosts() {
 
     postsDiv.innerHTML += `
       <div class="post">
-        <h4>${post.user
+        <h4>${post.user}</h4>
+        <p>${post.text}</p>
+
+        ${
+          post.link
+            ? `<a href="${post.link}" target="_blank">Visit 🔗</a>`
+            : ""
+        }
+      </div>
+    `;
+  });
+}
