@@ -23,9 +23,19 @@ const chatHeader = document.getElementById("chatHeader");
 let currentChatId = null;
 let currentUser = null;
 
+// 🔒 STOP LOOP
+let initialized = false;
+
 // ================= AUTH =================
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
+
+  if (initialized) return; // 🛑 VERY IMPORTANT
+  initialized = true;
+
+  if (!user) {
+    window.location.replace("index.html");
+    return;
+  }
 
   currentUser = user;
 
