@@ -60,10 +60,10 @@ function loadFeed() {
 /* ================= SEND MESSAGE ================= */
 window.sendMessage = async () => {
   const input = document.getElementById("chatInput");
-  if (!input) return;
+  if (!input || !user) return;
 
   const text = input.value.trim();
-  if (!text || !user) return;
+  if (!text) return;
 
   await addDoc(collection(db, "posts"), {
     text,
@@ -108,7 +108,7 @@ async function loadBTCPrice() {
     const btcEl = document.getElementById("btcPrice");
     if (btcEl) btcEl.innerText = data.bitcoin.usd;
 
-  } catch (e) {
+  } catch (err) {
     const btcEl = document.getElementById("btcPrice");
     if (btcEl) btcEl.innerText = "Error";
   }
@@ -116,12 +116,14 @@ async function loadBTCPrice() {
 
 setInterval(loadBTCPrice, 30000);
 
-/* ================= 🔥 UPGRADE FIX (100% WORKING) ================= */
+/* ================= 🚀 UPGRADE FIX (FINAL WORKING VERSION) ================= */
 
 const UPGRADE_LINK = "https://nowpayments.io/payment/?iid=5153003613";
 
-/* IMPORTANT: FORCE GLOBAL SCOPE */
-window.goPremium = function () {
+/**
+ * MAIN FUNCTION (THIS MUST WORK)
+ */
+function handleUpgrade() {
   alert("Upgrade clicked ✅");
 
   if (!user) {
@@ -129,18 +131,22 @@ window.goPremium = function () {
     return;
   }
 
-  // open payment
   window.open(UPGRADE_LINK, "_blank");
 
-  // save request
   setDoc(doc(db, "upgradeRequests", user.uid), {
     uid: user.uid,
     email: user.email,
     status: "pending",
     source: "NOWPayments",
     createdAt: Date.now()
+  }).catch(err => {
+    console.log("Upgrade save error:", err);
   });
-};
+}
+
+/* 🔥 FORCE GLOBAL ACCESS (CRITICAL FIX) */
+window.goPremium = handleUpgrade;
+window.upgrade = handleUpgrade; // backup in case HTML still uses old name
 
 /* ================= MENU ================= */
 window.toggleMenu = () => {
