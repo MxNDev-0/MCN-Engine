@@ -9,7 +9,9 @@ import {
   deleteDoc,
   updateDoc,
   query,
-  orderBy
+  orderBy,
+  getDocs,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* ================= WALLET ================= */
@@ -61,11 +63,16 @@ function loadUsers() {
 
 /* ================= BAN USER ================= */
 window.banUser = async (uid) => {
-  await updateDoc(doc(db, "users", uid), {
-    banned: true
-  });
+  try {
+    await updateDoc(doc(db, "users", uid), {
+      banned: true
+    });
 
-  alert("User banned ❌");
+    alert("User banned ❌");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to ban user");
+  }
 };
 
 /* ================= POSTS ================= */
@@ -90,35 +97,46 @@ function loadPosts() {
   });
 }
 
-/* ================= DELETE POST ================= */
+/* ================= DELETE SINGLE POST ================= */
 window.deletePost = async (id) => {
-  await deleteDoc(doc(db, "posts", id));
-};
-
-/* ================= CLEAR ALL POSTS ================= */
-window.clearAllPosts = async () => {
-  const snap = await getDocs(collection(db, "posts"));
-
-  if (snap.empty) {
-    alert("No posts found");
-    return;
+  try {
+    await deleteDoc(doc(db, "posts", id));
+  } catch (err) {
+    console.error(err);
+    alert("Failed to delete post");
   }
-
-  const ok = confirm("⚠️ Delete ALL posts permanently?");
-  if (!ok) return;
-
-  const batch = writeBatch(db);
-
-  snap.forEach((docSnap) => {
-    batch.delete(doc(db, "posts", docSnap.id));
-  });
-
-  await batch.commit();
-
-  alert("✅ All posts deleted");
 };
 
-/* ================= 🚀 UPGRADE SYSTEM (FIXED PROPER VERSION) ================= */
+/* ================= 🔥 FIXED: CLEAR ALL POSTS (WORKING 100%) ================= */
+window.clearAllPosts = async () => {
+  try {
+    const ok = confirm("⚠️ This will permanently delete ALL posts. Continue?");
+    if (!ok) return;
+
+    const snap = await getDocs(collection(db, "posts"));
+
+    if (snap.empty) {
+      alert("No posts found");
+      return;
+    }
+
+    const batch = writeBatch(db);
+
+    snap.forEach((docSnap) => {
+      batch.delete(doc(db, "posts", docSnap.id));
+    });
+
+    await batch.commit();
+
+    alert("✅ All posts deleted successfully!");
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to clear posts");
+  }
+};
+
+/* ================= UPGRADE REQUESTS ================= */
 function loadUpgrades() {
   const box = document.getElementById("upgradeList");
   if (!box) return;
@@ -128,16 +146,12 @@ function loadUpgrades() {
 
     snap.forEach(d => {
       const u = d.data();
-      const id = d.id;
 
       box.innerHTML += `
         <div style="padding:6px;margin:5px;background:#1c2541;border-radius:6px;">
           <b>${u.email}</b>
           <p>Status: ${u.status || "pending"}</p>
-
-          <button onclick="approveUpgrade('${id}', '${u.uid}')">
-            Approve
-          </button>
+          <button onclick="approveUpgrade('${u.uid}')">Approve</button>
         </div>
       `;
     });
@@ -145,24 +159,21 @@ function loadUpgrades() {
 }
 
 /* ================= APPROVE UPGRADE (FIXED) ================= */
-window.approveUpgrade = async (requestId, uid) => {
+window.approveUpgrade = async (uid) => {
   try {
-    // upgrade user
     await updateDoc(doc(db, "users", uid), {
       premium: true,
       upgradedAt: Date.now()
     });
 
-    // mark request handled
-    await updateDoc(doc(db, "upgradeRequests", requestId), {
+    await updateDoc(doc(db, "upgradeRequests", uid), {
       status: "approved"
     });
 
     alert("User upgraded ✅");
-
   } catch (err) {
     console.error(err);
-    alert("Upgrade failed ❌");
+    alert("Upgrade failed");
   }
 };
 
