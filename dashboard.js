@@ -13,81 +13,24 @@ import {
   orderBy,
   doc,
   setDoc,
-  updateDoc,
-  deleteDoc
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let user = null;
 
-/* ================= AUTH CHECK ================= */
-onAuthStateChanged(auth, async (u) => {
-  if (!u) location.href = "index.html";
+/* ================= AUTH ================= */
+onAuthStateChanged(auth, (u) => {
+  if (!u) {
+    location.href = "index.html";
+    return;
+  }
+
   user = u;
-
-  // ✅ MARK USER ONLINE
-  await setDoc(doc(db, "onlineUsers", user.uid), {
-    email: user.email,
-    lastActive: Date.now()
-  });
-
-  // ✅ AUTO REMOVE ON TAB CLOSE
-  window.addEventListener("beforeunload", async () => {
-    try {
-      await deleteDoc(doc(db, "onlineUsers", user.uid));
-    } catch (e) {}
-  });
 
   loadFeed();
   loadWallet();
   loadBTCPrice();
-  trackOnlineUsers(); // NEW
 });
-
-/* ================= ONLINE USERS SYSTEM ================= */
-function trackOnlineUsers() {
-  const usersRef = collection(db, "onlineUsers");
-
-  onSnapshot(usersRef, (snap) => {
-    const usersDiv = document.getElementById("onlineUsers");
-
-    if (!usersDiv) return;
-
-    usersDiv.innerHTML = "";
-
-    let count = 0;
-
-    snap.forEach(docSnap => {
-      const data = docSnap.data();
-      count++;
-
-      usersDiv.innerHTML += `
-        <div style="margin:4px 0;">
-          🟢 ${data.email}
-        </div>
-      `;
-    });
-
-    // ✅ SHOW COUNT IN TITLE
-    usersDiv.innerHTML =
-      `<b>Total Online: ${count}</b><hr>` + usersDiv.innerHTML;
-  });
-}
-
-/* ================= CHAT SYSTEM ================= */
-window.sendMessage = async () => {
-  const input = document.getElementById("chatInput");
-  const text = input.value.trim();
-
-  if (!text) return;
-
-  await addDoc(collection(db, "posts"), {
-    text,
-    user: user.email.split("@")[0],
-    time: Date.now()
-  });
-
-  input.value = "";
-};
 
 /* ================= FEED ================= */
 function loadFeed() {
@@ -95,6 +38,8 @@ function loadFeed() {
 
   onSnapshot(q, (snap) => {
     const box = document.getElementById("chatBox");
+    if (!box) return;
+
     box.innerHTML = "";
 
     snap.forEach(docSnap => {
@@ -112,81 +57,101 @@ function loadFeed() {
   });
 }
 
+/* ================= SEND MESSAGE ================= */
+window.sendMessage = async () => {
+  const input = document.getElementById("chatInput");
+  if (!input || !user) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  await addDoc(collection(db, "posts"), {
+    text,
+    user: user.email.split("@")[0],
+    time: Date.now()
+  });
+
+  input.value = "";
+};
+
 /* ================= WALLET ================= */
 function loadWallet() {
   const walletRef = doc(db, "wallet", "main");
 
   onSnapshot(walletRef, (snap) => {
-    if (snap.exists()) {
-      const data = snap.data();
+    if (!snap.exists()) return;
 
-      const balanceEl = document.getElementById("walletBalance");
-      const updatedEl = document.getElementById("walletUpdated");
+    const data = snap.data();
 
-      if (balanceEl) balanceEl.innerText = data.balance || 0;
+    const balanceEl = document.getElementById("walletBalance");
+    const updatedEl = document.getElementById("walletUpdated");
 
-      if (updatedEl) {
-        updatedEl.innerText = data.lastUpdated
-          ? new Date(data.lastUpdated).toLocaleString()
-          : "-";
-      }
+    if (balanceEl) balanceEl.innerText = data.balance ?? 0;
+
+    if (updatedEl) {
+      updatedEl.innerText = data.lastUpdated
+        ? new Date(data.lastUpdated).toLocaleString()
+        : "-";
     }
   });
 }
 
-/* ================= CRYPTO PRICES ================= */
+/* ================= BTC PRICE ================= */
 async function loadBTCPrice() {
   try {
     const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,tether&vs_currencies=usd"
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
     );
 
     const data = await res.json();
 
     const btcEl = document.getElementById("btcPrice");
+    if (btcEl) btcEl.innerText = data.bitcoin.usd;
 
-    if (btcEl) {
-      btcEl.innerText =
-        "BTC: $" + data.bitcoin.usd +
-        " | ETH: $" + data.ethereum.usd +
-        " | BNB: $" + data.binancecoin.usd +
-        " | USDT: $" + data.tether.usd;
-    }
   } catch (err) {
     const btcEl = document.getElementById("btcPrice");
-    if (btcEl) btcEl.innerText = "Error loading prices";
+    if (btcEl) btcEl.innerText = "Error";
   }
 }
 
 setInterval(loadBTCPrice, 30000);
 
-/* ================= UPGRADE SYSTEM ================= */
+/* ================= 🚀 UPGRADE FIX (FINAL WORKING VERSION) ================= */
+
 const UPGRADE_LINK = "https://nowpayments.io/payment/?iid=5153003613";
 
-window.goPremium = async () => {
-  if (!user) return;
+/**
+ * MAIN FUNCTION (THIS MUST WORK)
+ */
+function handleUpgrade() {
+  alert("Upgrade clicked ✅");
+
+  if (!user) {
+    alert("Not logged in");
+    return;
+  }
 
   window.open(UPGRADE_LINK, "_blank");
 
-  await setDoc(doc(db, "upgradeRequests", user.uid), {
+  setDoc(doc(db, "upgradeRequests", user.uid), {
     uid: user.uid,
     email: user.email,
     status: "pending",
+    source: "NOWPayments",
     createdAt: Date.now()
+  }).catch(err => {
+    console.log("Upgrade save error:", err);
   });
+}
 
-  alert("Upgrade request sent.");
-};
-
-/* FIX BUTTON */
-window.upgrade = function () {
-  window.goPremium();
-};
+/* 🔥 FORCE GLOBAL ACCESS (CRITICAL FIX) */
+window.goPremium = handleUpgrade;
+window.upgrade = handleUpgrade; // backup in case HTML still uses old name
 
 /* ================= MENU ================= */
 window.toggleMenu = () => {
   const m = document.getElementById("menu");
-  m.style.display = (m.style.display === "block") ? "none" : "block";
+  if (m) m.style.display = m.style.display === "block" ? "none" : "block";
 };
 
 function closeMenu() {
@@ -210,19 +175,13 @@ window.goAdmin = () => {
   if (!user) return;
 
   if (user.email !== "nc.maxiboro@gmail.com") {
-    alert("❌ Admin panel locked");
+    alert("❌ Admin locked");
   } else {
     location.href = "admin.html";
   }
 };
 
 /* ================= LOGOUT ================= */
-window.logout = async () => {
-  if (user) {
-    try {
-      await deleteDoc(doc(db, "onlineUsers", user.uid));
-    } catch (e) {}
-  }
-
+window.logout = () => {
   signOut(auth).then(() => location.href = "index.html");
 };
