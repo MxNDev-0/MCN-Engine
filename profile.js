@@ -9,7 +9,9 @@ import {
   addDoc,
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  updateDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let user = null;
@@ -21,7 +23,7 @@ onAuthStateChanged(auth, (u) => {
   loadPosts();
 });
 
-/* ✅ PROFILE POST FIXED */
+/* ================= CREATE POST ================= */
 window.createPost = async () => {
   const input = document.getElementById("postInput");
   const text = input.value.trim();
@@ -31,32 +33,67 @@ window.createPost = async () => {
   await addDoc(collection(db, "posts"), {
     text,
     user: user.email.split("@")[0],
+    visibility: "public",   // DEFAULT
     time: Date.now()
   });
 
   input.value = "";
 };
 
+/* ================= LOAD POSTS ================= */
 function loadPosts() {
   const q = query(collection(db, "posts"), orderBy("time"));
 
   onSnapshot(q, (snap) => {
-    const box = document.getElementById("profilePosts");
+    const box = document.getElementById("myPosts");
     box.innerHTML = "";
 
-    snap.forEach(doc => {
-      const p = doc.data();
+    snap.forEach(docSnap => {
+      const p = docSnap.data();
+      const id = docSnap.id;
 
+      // ONLY SHOW USER POSTS
       if (p.user === user.email.split("@")[0]) {
+
         box.innerHTML += `
-          <div style="margin:6px 0;">
-            <div style="color:#fff;">${p.text}</div>
+          <div style="margin:10px 0;padding:10px;background:#1c2541;border-radius:8px;">
+
+            <div style="color:#fff;margin-bottom:6px;">
+              ${p.text}
+            </div>
+
+            <small>Visibility: ${p.visibility}</small>
+
+            <div style="margin-top:8px;display:flex;gap:6px;">
+              
+              <button onclick="setPublic('${id}')" style="width:auto;">
+                Public
+              </button>
+
+              <button onclick="setPrivate('${id}')" style="width:auto;">
+                Private
+              </button>
+
+            </div>
           </div>
         `;
       }
     });
   });
 }
+
+/* ================= TOGGLE VISIBILITY ================= */
+window.setPublic = async (id) => {
+  await updateDoc(doc(db, "posts", id), {
+    visibility: "public"
+  });
+};
+
+window.setPrivate = async (id) => {
+  await updateDoc(doc(db, "posts", id), {
+    visibility: "private"
+  });
+};
 
 /* MENU */
 window.toggleMenu = () => {
