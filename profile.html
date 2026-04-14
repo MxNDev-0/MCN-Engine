@@ -17,7 +17,9 @@
   <!-- CREATE POST -->
   <div class="card">
     <h4>Create Post</h4>
-    <textarea id="postText" placeholder="Write something..."></textarea>
+
+    <!-- FIXED ID (IMPORTANT) -->
+    <textarea id="postInput" placeholder="Write something..."></textarea>
 
     <div style="display:flex;justify-content:flex-end;">
       <button onclick="createPost()" style="width:auto;">Post</button>
@@ -27,6 +29,8 @@
   <!-- MY POSTS -->
   <div class="card">
     <h4>My Field</h4>
+
+    <!-- FIXED ID -->
     <div id="myPosts"></div>
   </div>
 
