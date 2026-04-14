@@ -15,7 +15,7 @@ import {
 
 let currentUser = null;
 
-/* SAFE INIT */
+/* AUTH */
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     location.href = "index.html";
@@ -24,7 +24,6 @@ onAuthStateChanged(auth, (user) => {
 
   currentUser = user;
 
-  // WAIT FOR DOM SAFETY
   setTimeout(() => {
     listenChat();
     listenUsers();
@@ -32,7 +31,7 @@ onAuthStateChanged(auth, (user) => {
   }, 300);
 });
 
-/* ================= CHAT ================= */
+/* CHAT FIX */
 window.sendMessage = async () => {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
@@ -40,7 +39,7 @@ window.sendMessage = async () => {
   if (!text || !currentUser) return;
 
   await addDoc(collection(db, "chat"), {
-    name: currentUser.email.split("@")[0], // FIXED username display
+    name: currentUser.email.split("@")[0],
     text,
     time: Date.now()
   });
@@ -48,7 +47,7 @@ window.sendMessage = async () => {
   input.value = "";
 };
 
-/* REAL TIME CHAT (FIXED SAFE) */
+/* CHAT LISTENER */
 function listenChat() {
   const q = query(collection(db, "chat"), orderBy("time"));
 
@@ -60,18 +59,14 @@ function listenChat() {
 
     snap.forEach(d => {
       const m = d.data();
-      box.innerHTML += `
-        <div style="margin:5px 0;">
-          <b>${m.name}</b>: ${m.text}
-        </div>
-      `;
+      box.innerHTML += `<div><b>${m.name}</b>: ${m.text}</div>`;
     });
 
     box.scrollTop = box.scrollHeight;
   });
 }
 
-/* ================= USERS ================= */
+/* USERS */
 function listenUsers() {
   onSnapshot(collection(db, "users"), (snap) => {
     const box = document.getElementById("onlineUsers");
@@ -81,16 +76,14 @@ function listenUsers() {
 
     snap.forEach(d => {
       const u = d.data();
-
       if (u.email) {
-        const name = u.email.split("@")[0];
-        box.innerHTML += `<div>🟢 ${name}</div>`;
+        box.innerHTML += `<div>🟢 ${u.email.split("@")[0]}</div>`;
       }
     });
   });
 }
 
-/* ================= POSTS ================= */
+/* POSTS */
 function listenPosts() {
   onSnapshot(collection(db, "posts"), (snap) => {
     const box = document.getElementById("posts");
@@ -100,18 +93,34 @@ function listenPosts() {
 
     snap.forEach(d => {
       const p = d.data();
-
-      box.innerHTML += `
-        <div style="margin-bottom:10px;">
-          <b>${p.user}</b>
-          <p>${p.text}</p>
-        </div>
-      `;
+      box.innerHTML += `<div><b>${p.user}</b><p>${p.text}</p></div>`;
     });
   });
 }
 
-/* ================= LOGOUT ================= */
-window.logout = () => {
-  signOut(auth).then(() => location.href = "index.html");
+/* MENU ACTIONS */
+window.toggleMenu = () => {
+  const m = document.getElementById("menu");
+  m.style.display = m.style.display === "block" ? "none" : "block";
 };
+
+window.goHome = () => location.reload();
+window.goProfile = () => location.href = "profile.html";
+
+window.goAdmin = () => {
+  if (!currentUser || currentUser.email !== "nc.maxiboro@gmail.com") {
+    alert("Not admin");
+    return;
+  }
+  alert("Admin panel unlocked");
+};
+
+window.support = () => {
+  window.open("https://nowpayments.io/payment/?iid=5153003613");
+};
+
+window.goUpgrade = () => {
+  window.open("https://nowpayments.io/payment/?iid=5153003613");
+};
+
+window.logout = () => signOut(auth).then(() => location.href = "index.html");
