@@ -9,38 +9,25 @@
 <body>
 
 <div class="navbar">
-  <button onclick="toggleMenu()">☰</button>
-  <h3>Profile</h3>
-</div>
-
-<!-- MENU -->
-<div id="menu" class="menu" style="display:none;">
-
-  <p id="userEmail"></p>
-
-  <button onclick="goDashboard()">Dashboard</button>
-  <button onclick="setUsername()">Set Username</button>
-  <button onclick="changePassword()">Change Password</button>
-  <button onclick="openMySection()">My Section</button>
-  <button onclick="contactSupport()">Contact Support</button>
-
+  <h3 style="margin:auto;">Profile 👤</h3>
 </div>
 
 <div class="container">
 
-  <!-- POST BOX -->
+  <!-- CREATE POST -->
   <div class="card">
-    <h4>📝 Create Post</h4>
+    <h4>Create Post</h4>
+    <textarea id="postText" placeholder="Write something..."></textarea>
 
-    <textarea id="postText" placeholder="Write..."></textarea>
-    <button onclick="createPost()">Post</button>
-
+    <div style="display:flex;justify-content:flex-end;">
+      <button onclick="createPost()" style="width:auto;">Post</button>
+    </div>
   </div>
 
-  <!-- FEED (SAME AS DASHBOARD) -->
+  <!-- MY POSTS -->
   <div class="card">
-    <h4>📢 My Feed</h4>
-    <div id="posts"></div>
+    <h4>My Field</h4>
+    <div id="myPosts"></div>
   </div>
 
 </div>
