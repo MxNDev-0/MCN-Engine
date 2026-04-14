@@ -2,7 +2,8 @@ import { auth, db } from "./firebase.js";
 
 import {
   onAuthStateChanged,
-  signOut
+  signOut,
+  updatePassword
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
@@ -13,33 +14,28 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let currentUser = null;
+let user = null;
 
 /* AUTH */
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    location.href = "index.html";
-    return;
-  }
+onAuthStateChanged(auth, (u) => {
+  if (!u) location.href = "index.html";
 
-  currentUser = user;
+  user = u;
 
-  setTimeout(() => {
-    listenChat();
-    listenUsers();
-    listenPosts();
-  }, 300);
+  loadChat();
+  loadUsers();
+  loadPosts();
 });
 
-/* CHAT FIX */
+/* ================= CHAT (FIXED USING POST STYLE) ================= */
 window.sendMessage = async () => {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
 
-  if (!text || !currentUser) return;
+  if (!text || !user) return;
 
   await addDoc(collection(db, "chat"), {
-    name: currentUser.email.split("@")[0],
+    user: user.email.split("@")[0],
     text,
     time: Date.now()
   });
@@ -47,31 +43,24 @@ window.sendMessage = async () => {
   input.value = "";
 };
 
-/* CHAT LISTENER */
-function listenChat() {
-  const q = query(collection(db, "chat"), orderBy("time"));
-
-  onSnapshot(q, (snap) => {
+function loadChat() {
+  onSnapshot(collection(db, "chat"), (snap) => {
     const box = document.getElementById("chatBox");
-    if (!box) return;
-
     box.innerHTML = "";
 
     snap.forEach(d => {
       const m = d.data();
-      box.innerHTML += `<div><b>${m.name}</b>: ${m.text}</div>`;
+      box.innerHTML += `<div><b>${m.user}</b>: ${m.text}</div>`;
     });
 
     box.scrollTop = box.scrollHeight;
   });
 }
 
-/* USERS */
-function listenUsers() {
+/* ================= USERS ================= */
+function loadUsers() {
   onSnapshot(collection(db, "users"), (snap) => {
     const box = document.getElementById("onlineUsers");
-    if (!box) return;
-
     box.innerHTML = "";
 
     snap.forEach(d => {
@@ -83,12 +72,24 @@ function listenUsers() {
   });
 }
 
-/* POSTS */
-function listenPosts() {
+/* ================= POSTS ================= */
+window.createPost = async () => {
+  const text = document.getElementById("postText").value;
+
+  if (!text) return alert("Write something");
+
+  await addDoc(collection(db, "posts"), {
+    text,
+    user: user.email.split("@")[0],
+    time: Date.now()
+  });
+
+  document.getElementById("postText").value = "";
+};
+
+function loadPosts() {
   onSnapshot(collection(db, "posts"), (snap) => {
     const box = document.getElementById("posts");
-    if (!box) return;
-
     box.innerHTML = "";
 
     snap.forEach(d => {
@@ -98,29 +99,50 @@ function listenPosts() {
   });
 }
 
-/* MENU ACTIONS */
+/* ================= MENU ================= */
 window.toggleMenu = () => {
   const m = document.getElementById("menu");
-  m.style.display = m.style.display === "block" ? "none" : "block";
+  m.style.display = (m.style.display === "block") ? "none" : "block";
 };
 
-window.goHome = () => location.reload();
-window.goProfile = () => location.href = "profile.html";
+function closeMenu() {
+  document.getElementById("menu").style.display = "none";
+}
+
+window.goHome = () => {
+  closeMenu();
+  location.reload();
+};
+
+window.goProfile = () => {
+  closeMenu();
+  location.href = "profile.html";
+};
 
 window.goAdmin = () => {
-  if (!currentUser || currentUser.email !== "nc.maxiboro@gmail.com") {
-    alert("Not admin");
+  closeMenu();
+
+  if (user.email !== "nc.maxiboro@gmail.com") {
+    alert("❌ Admin panel locked");
     return;
   }
-  alert("Admin panel unlocked");
+
+  alert("✅ Welcome to Admin Office");
 };
 
+/* SUPPORT DISABLED */
 window.support = () => {
+  closeMenu();
+  alert("Support not active yet");
+};
+
+/* UPGRADE */
+window.upgrade = () => {
+  closeMenu();
   window.open("https://nowpayments.io/payment/?iid=5153003613");
 };
 
-window.goUpgrade = () => {
-  window.open("https://nowpayments.io/payment/?iid=5153003613");
+/* LOGOUT */
+window.logout = () => {
+  signOut(auth).then(() => location.href = "index.html");
 };
-
-window.logout = () => signOut(auth).then(() => location.href = "index.html");
