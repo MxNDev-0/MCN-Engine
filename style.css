@@ -1,62 +1,30 @@
 body {
+  margin: 0;
   font-family: Arial;
   background: #0b132b;
   color: white;
-  margin: 0;
-}
-
-/* LOGIN FIX */
-.login-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.center-box {
-  width: 90%;
-  max-width: 320px;
-  background: #1c2541;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border-radius: 5px;
-  border: none;
-  box-sizing: border-box;
-}
-
-button {
-  width: 100%;
-  margin: 5px 0;
-  padding: 10px;
-  border-radius: 5px;
-  background: #5bc0be;
-  border: none;
-  cursor: pointer;
 }
 
 /* NAVBAR */
 .navbar {
   display: flex;
   justify-content: space-between;
-  padding: 10px;
+  align-items: center;
   background: #1c2541;
+  padding: 10px;
 }
 
-/* FIX HAMBURGER SIZE ONLY */
-.menu-btn {
-  width: 35px;
-  height: 35px;
-  font-size: 18px;
+/* ✅ SMALL BUTTONS */
+.navbar button {
+  width: auto;
+  padding: 5px 8px;
+  font-size: 13px;
+  border-radius: 5px;
+  background: #5bc0be;
+  border: none;
 }
 
-/* DROPDOWN MENU */
+/* MENU */
 .menu {
   display: none;
   position: absolute;
@@ -68,37 +36,66 @@ button {
   width: 160px;
 }
 
+/* KEEP DESIGN, JUST SMALLER */
 .menu button {
   width: 100%;
-  margin: 4px 0;
+  margin: 5px 0;
+  padding: 6px;
+  font-size: 13px;
 }
 
-/* CHAT FIX */
-.chat-box {
-  background: #1c2541;
-  padding: 10px;
-  height: 300px;
-  overflow-y: auto;
-  border-radius: 10px;
-}
-
-.chat-input {
-  display: flex;
-  gap: 5px;
-}
-
-.chat-input input {
-  flex: 1;
-}
-
-.chat-input button {
-  width: 80px;
-}
-
-/* POSTS */
-.post {
-  background: #1c2541;
-  padding: 10px;
+/* DASHBOARD TITLE BADGE */
+.title-box {
+  text-align: center;
   margin: 10px 0;
+}
+
+.title-box h2 {
+  margin: 0;
+}
+
+.badge {
+  background: gold;
+  color: black;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* CARD */
+.card {
+  background: #1c2541;
+  padding: 12px;
+  margin: 10px;
   border-radius: 10px;
+}
+
+/* CHAT BOX */
+#chatBox {
+  height: 220px;
+  overflow-y: auto;
+  background: #0b132b;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+/* INPUT ROW */
+.row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.row input {
+  width: 70%;
+  padding: 8px;
+  border-radius: 5px;
+  border: none;
+}
+
+.row button {
+  padding: 6px 10px;
+  border-radius: 5px;
+  background: #5bc0be;
+  border: none;
 }
