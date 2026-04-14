@@ -13,75 +13,82 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let username = "User";
+let user = null;
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) location.href = "index.html";
-  listenChat();
-  listenUsers();
-  listenPosts();
+onAuthStateChanged(auth, (u) => {
+  if (!u) location.href = "index.html";
+  user = u;
+
+  loadFeed();
 });
 
-/* ✅ FIXED CHAT (NOW WORKS) */
+/* ✅ FIXED FEED */
 window.sendMessage = async () => {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
 
   if (!text) return;
 
-  await addDoc(collection(db, "chat"), {
-    name: username,
+  await addDoc(collection(db, "posts"), {
     text,
+    user: user.email.split("@")[0],
     time: Date.now()
   });
 
   input.value = "";
 };
 
-/* REALTIME CHAT */
-function listenChat() {
-  const q = query(collection(db, "chat"), orderBy("time"));
+function loadFeed() {
+  const q = query(collection(db, "posts"), orderBy("time"));
 
   onSnapshot(q, (snap) => {
     const box = document.getElementById("chatBox");
     box.innerHTML = "";
 
-    snap.forEach(d => {
-      const m = d.data();
+    snap.forEach(doc => {
+      const m = doc.data();
+
       box.innerHTML += `
-        <div style="padding:5px">
-          <b>${m.name}</b>: ${m.text}
-        </div>`;
+        <div style="margin:6px 0;">
+          <b style="color:#5bc0be;">${m.user}</b>
+          <div style="color:#fff;">${m.text}</div>
+        </div>
+      `;
     });
 
     box.scrollTop = box.scrollHeight;
   });
 }
 
-/* USERS COUNT FIX */
-function listenUsers() {
-  onSnapshot(collection(db, "users"), (snap) => {
-    const box = document.getElementById("onlineUsers");
-    box.innerHTML = "Online: " + snap.size;
-  });
+/* MENU */
+window.toggleMenu = () => {
+  const m = document.getElementById("menu");
+  m.style.display = (m.style.display === "block") ? "none" : "block";
+};
+
+function closeMenu() {
+  document.getElementById("menu").style.display = "none";
 }
 
-/* POSTS */
-function listenPosts() {
-  onSnapshot(collection(db, "posts"), (snap) => {
-    const box = document.getElementById("posts");
-    box.innerHTML = "";
+window.goProfile = () => {
+  closeMenu();
+  location.href = "profile.html";
+};
 
-    snap.forEach(d => {
-      const p = d.data();
-      box.innerHTML += `
-        <div class="post">
-          <b>${p.user}</b>
-          <p>${p.text}</p>
-        </div>`;
-    });
-  });
-}
+window.goHome = () => {
+  closeMenu();
+  location.reload();
+};
 
-window.logout = () =>
+window.goAdmin = () => {
+  closeMenu();
+  if (user.email !== "nc.maxiboro@gmail.com") {
+    alert("❌ Admin panel locked");
+  } else {
+    alert("✅ Admin access");
+  }
+};
+
+window.logout = () => {
   signOut(auth).then(() => location.href = "index.html");
+};
