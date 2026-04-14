@@ -2,48 +2,145 @@
 <html>
 <head>
   <title>Admin Control Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      background: #0b132b;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: #1c2541;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    h2, h3 {
+      margin: 0 0 10px 0;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: #0b132b;
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 8px;
+      background: #5bc0be;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .danger {
+      background: #ff4d4d !important;
+      color: #fff;
+    }
+
+    .list-box {
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 5px;
+      background: #0b132b;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .item {
+      padding: 8px;
+      margin-bottom: 6px;
+      background: #16213e;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .small-btn {
+      width: auto;
+      padding: 6px 10px;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="card">
-  <h2>👑 Admin Control Panel</h2>
+<h2>👑 Pro Admin Control Panel V3</h2>
 
-  <h3>💰 Update Wallet Balance</h3>
+<div class="grid">
 
-  <input id="balanceInput" placeholder="Enter new balance">
+  <!-- WALLET -->
+  <div class="card">
+    <h3>💰 Wallet</h3>
+    <input id="balanceInput" placeholder="Enter new balance">
+    <button onclick="updateWallet()">Update Wallet</button>
+  </div>
 
-  <button onclick="updateWallet()">
-    Update Wallet
-  </button>
+  <!-- EARNINGS -->
+  <div class="card">
+    <h3>➕ Earnings</h3>
+    <input id="source" placeholder="Source">
+    <input id="amount" placeholder="Amount">
+    <button onclick="addEarning()">Add Earnings</button>
+  </div>
 
-  <hr>
+  <!-- USERS -->
+  <div class="card">
+    <h3>👥 Users</h3>
+    <div id="usersList" class="list-box"></div>
+  </div>
 
-  <h3>➕ Add Earnings Entry</h3>
+  <!-- UPGRADES -->
+  <div class="card">
+    <h3>🚀 Upgrade Requests</h3>
+    <div id="upgradeList" class="list-box"></div>
+  </div>
 
-  <input id="source" placeholder="Source (e.g. ForFans)">
-  <input id="amount" placeholder="Amount">
-
-  <button onclick="addEarning()">
-    Add Earnings
-  </button>
-
-  <hr>
-
-  <!-- 🔥 NEW ADD-ON SECTION (SAFE) -->
-  <h3>👥 Users Management</h3>
-  <div id="usersList" style="margin-bottom:10px;"></div>
-
-  <h3>🚀 Upgrade Requests</h3>
-  <div id="upgradeList"></div>
-
-  <h3>💬 Posts Control</h3>
-  <button onclick="clearAllPosts()">Clear All Posts</button>
-  <div id="postsList"></div>
+  <!-- POSTS -->
+  <div class="card">
+    <h3>💬 Posts Control</h3>
+    <button class="danger" onclick="clearAllPosts()">Clear All Posts</button>
+    <div id="postsList" class="list-box"></div>
+  </div>
 
 </div>
 
 <script type="module" src="admin.js"></script>
+
 </body>
 </html>
