@@ -10,10 +10,9 @@ import {
   updateDoc,
   query,
   orderBy,
-  getDocs
+  getDocs,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-let deleting = false;
 
 /* ================= WALLET ================= */
 window.updateWallet = async () => {
@@ -41,7 +40,7 @@ window.addEarning = async () => {
   alert("Earning added!");
 };
 
-/* ================= USERS ================= */
+/* ================= USERS LIST ================= */
 function loadUsers() {
   const box = document.getElementById("usersList");
   if (!box) return;
@@ -53,26 +52,25 @@ function loadUsers() {
       const u = d.data();
 
       box.innerHTML += `
-        <div style="padding:8px;margin:6px;background:#1c2541;border-radius:6px;">
+        <div style="padding:6px;margin:5px;background:#1c2541;border-radius:6px;">
           <b>${u.email}</b>
-          <button onclick="toggleBan('${u.uid}', true)">Ban</button>
-          <button onclick="toggleBan('${u.uid}', false)">Unban</button>
+          <button onclick="banUser('${u.uid}')">Ban</button>
         </div>
       `;
     });
   });
 }
 
-/* ================= BAN / UNBAN ================= */
-window.toggleBan = async (uid, status) => {
+/* ================= BAN USER ================= */
+window.banUser = async (uid) => {
   await updateDoc(doc(db, "users", uid), {
-    banned: status
+    banned: true
   });
 
-  alert(status ? "User banned ❌" : "User unbanned ✅");
+  alert("User banned ❌");
 };
 
-/* ================= POSTS LIST ================= */
+/* ================= POSTS ================= */
 function loadPosts() {
   const box = document.getElementById("postsList");
   if (!box) return;
@@ -84,7 +82,7 @@ function loadPosts() {
       const p = d.data();
 
       box.innerHTML += `
-        <div style="padding:8px;margin:6px;background:#0b132b;border-radius:6px;">
+        <div style="padding:6px;margin:5px;background:#0b132b;border-radius:6px;">
           <b>${p.user}</b>
           <p>${p.text}</p>
           <button onclick="deletePost('${d.id}')">Delete</button>
@@ -96,92 +94,34 @@ function loadPosts() {
 
 /* ================= DELETE SINGLE POST ================= */
 window.deletePost = async (id) => {
-  if (!confirm("Delete this post?")) return;
-
-  try {
-    await deleteDoc(doc(db, "posts", id));
-    alert("Post deleted ✅");
-  } catch (err) {
-    console.error(err);
-    alert("Failed to delete ❌");
-  }
+  await deleteDoc(doc(db, "posts", id));
 };
 
-/* ================= DELETE ALL POSTS (ROBUST) ================= */
+/* ================= ✅ FIXED: CLEAR ALL POSTS ================= */
 window.clearAllPosts = async () => {
-  if (deleting) return;
+  const confirmDelete = confirm("⚠️ Delete ALL posts permanently?");
 
-  const ok = confirm("⚠️ Delete ALL posts permanently?");
-  if (!ok) return;
-
-  deleting = true;
+  if (!confirmDelete) return;
 
   try {
     const snap = await getDocs(collection(db, "posts"));
 
-    if (snap.empty) {
-      alert("No posts found");
-      deleting = false;
-      return;
-    }
+    const batch = writeBatch(db);
 
-    let count = 0;
+    snap.forEach((docSnap) => {
+      batch.delete(doc(db, "posts", docSnap.id));
+    });
 
-    for (const d of snap.docs) {
-      await deleteDoc(doc(db, "posts", d.id));
-      count++;
-    }
+    await batch.commit();
 
-    alert(`Deleted ${count} posts ✅`);
+    alert("✅ All posts deleted successfully!");
   } catch (err) {
     console.error(err);
-    alert("Error deleting posts ❌");
+    alert("❌ Failed to delete posts");
   }
-
-  deleting = false;
 };
 
-/* ================= DELETE BY USER ================= */
-window.deleteUserPosts = async (emailPrefix) => {
-  if (!confirm(`Delete ALL posts from ${emailPrefix}?`)) return;
-
-  const snap = await getDocs(collection(db, "posts"));
-
-  let count = 0;
-
-  for (const d of snap.docs) {
-    const data = d.data();
-
-    if (data.user === emailPrefix) {
-      await deleteDoc(doc(db, "posts", d.id));
-      count++;
-    }
-  }
-
-  alert(`Deleted ${count} posts from ${emailPrefix} ✅`);
-};
-
-/* ================= CLEAN OLD POSTS ================= */
-window.cleanOldPosts = async (days = 7) => {
-  const limit = Date.now() - days * 24 * 60 * 60 * 1000;
-
-  const snap = await getDocs(collection(db, "posts"));
-
-  let count = 0;
-
-  for (const d of snap.docs) {
-    const data = d.data();
-
-    if (data.time < limit) {
-      await deleteDoc(doc(db, "posts", d.id));
-      count++;
-    }
-  }
-
-  alert(`Cleaned ${count} old posts 🧹`);
-};
-
-/* ================= UPGRADES ================= */
+/* ================= UPGRADE REQUESTS ================= */
 function loadUpgrades() {
   const box = document.getElementById("upgradeList");
   if (!box) return;
@@ -193,9 +133,9 @@ function loadUpgrades() {
       const u = d.data();
 
       box.innerHTML += `
-        <div style="padding:8px;margin:6px;background:#1c2541;border-radius:6px;">
+        <div style="padding:6px;margin:5px;background:#1c2541;border-radius:6px;">
           <b>${u.email}</b>
-          <p>Status: ${u.status}</p>
+          <p>Status: ${u.status || "pending"}</p>
           <button onclick="approveUpgrade('${u.uid}')">Approve</button>
         </div>
       `;
@@ -207,10 +147,6 @@ function loadUpgrades() {
 window.approveUpgrade = async (uid) => {
   await updateDoc(doc(db, "users", uid), {
     premium: true
-  });
-
-  await updateDoc(doc(db, "upgradeRequests", uid), {
-    status: "approved"
   });
 
   alert("User upgraded ✅");
