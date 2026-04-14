@@ -9,20 +9,42 @@
 <body>
 
 <div class="navbar">
-  <button onclick="goBack()">←</button>
+  <button onclick="toggleMenu()">☰</button>
   <h3>Profile</h3>
+</div>
+
+<!-- MENU -->
+<div id="menu" class="menu" style="display:none;">
+
+  <p id="userEmail"></p>
+
+  <button onclick="goDashboard()">Dashboard</button>
+  <button onclick="setUsername()">Set Username</button>
+  <button onclick="changePassword()">Change Password</button>
+  <button onclick="openMySection()">My Section</button>
+  <button onclick="contactSupport()">Contact Support</button>
+
 </div>
 
 <div class="container">
 
-  <div class="post-box">
-    <textarea id="postText" placeholder="Write something..."></textarea>
+  <!-- POST BOX -->
+  <div class="card">
+    <h4>📝 Create Post</h4>
+
+    <textarea id="postText" placeholder="Write..."></textarea>
     <button onclick="createPost()">Post</button>
+
+  </div>
+
+  <!-- FEED (SAME AS DASHBOARD) -->
+  <div class="card">
+    <h4>📢 My Feed</h4>
+    <div id="posts"></div>
   </div>
 
 </div>
 
 <script type="module" src="profile.js"></script>
-
 </body>
 </html>
