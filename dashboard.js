@@ -33,9 +33,7 @@ onAuthStateChanged(auth, (u) => {
 });
 
 /* ================= CHAT SYSTEM ================= */
-window.sendMessage = async function () {
-  if (!user) return;
-
+window.sendMessage = async () => {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
 
@@ -56,11 +54,9 @@ function loadFeed() {
 
   onSnapshot(q, (snap) => {
     const box = document.getElementById("chatBox");
-    if (!box) return;
-
     box.innerHTML = "";
 
-    snap.forEach((docSnap) => {
+    snap.forEach(docSnap => {
       const m = docSnap.data();
 
       box.innerHTML += `
@@ -75,7 +71,7 @@ function loadFeed() {
   });
 }
 
-/* ================= WALLET ================= */
+/* ================= WALLET (READ ONLY) ================= */
 function loadWallet() {
   const walletRef = doc(db, "wallet", "main");
 
@@ -87,7 +83,7 @@ function loadWallet() {
     const balanceEl = document.getElementById("walletBalance");
     const updatedEl = document.getElementById("walletUpdated");
 
-    if (balanceEl) balanceEl.innerText = data.balance || 0;
+    if (balanceEl) balanceEl.innerText = data.balance ?? 0;
 
     if (updatedEl) {
       updatedEl.innerText = data.lastUpdated
@@ -97,7 +93,7 @@ function loadWallet() {
   });
 }
 
-/* ================= BTC PRICE ================= */
+/* ================= LIVE BTC PRICE ================= */
 async function loadBTCPrice() {
   try {
     const res = await fetch(
@@ -107,10 +103,8 @@ async function loadBTCPrice() {
     const data = await res.json();
 
     const btcEl = document.getElementById("btcPrice");
+    if (btcEl) btcEl.innerText = data.bitcoin.usd;
 
-    if (btcEl) {
-      btcEl.innerText = data.bitcoin?.usd || "N/A";
-    }
   } catch (err) {
     const btcEl = document.getElementById("btcPrice");
     if (btcEl) btcEl.innerText = "Error";
@@ -119,16 +113,14 @@ async function loadBTCPrice() {
 
 setInterval(loadBTCPrice, 30000);
 
-/* ================= 🚀 UPGRADE SYSTEM ================= */
+/* ================= 🚀 UPGRADE SYSTEM FIX ================= */
 
 const UPGRADE_LINK = "https://nowpayments.io/payment/?iid=5153003613";
 
-// 🔥 THIS IS THE ONLY FUNCTION YOUR BUTTON MUST CALL
+/* IMPORTANT: FORCE GLOBAL ATTACHMENT */
 window.goPremium = function () {
-  console.log("Upgrade clicked");
-
   if (!user) {
-    alert("Please login first");
+    alert("Not logged in");
     return;
   }
 
@@ -142,13 +134,15 @@ window.goPremium = function () {
     status: "pending",
     source: "NOWPayments",
     createdAt: Date.now()
-  }).catch(console.error);
-
-  alert("Upgrade started. Complete payment to activate premium.");
+  }).then(() => {
+    alert("Upgrade request sent. Complete payment to activate premium.");
+  }).catch(err => {
+    alert("Error sending upgrade request: " + err.message);
+  });
 };
 
-/* ================= ADMIN UPGRADE (FUTURE) ================= */
-window.confirmUpgrade = async function (uid) {
+/* admin confirm */
+window.confirmUpgrade = async (uid) => {
   await updateDoc(doc(db, "users", uid), {
     premium: true,
     upgradedAt: Date.now()
@@ -158,11 +152,9 @@ window.confirmUpgrade = async function (uid) {
 };
 
 /* ================= MENU ================= */
-window.toggleMenu = function () {
+window.toggleMenu = () => {
   const m = document.getElementById("menu");
-  if (!m) return;
-
-  m.style.display = (m.style.display === "block") ? "none" : "block";
+  if (m) m.style.display = m.style.display === "block" ? "none" : "block";
 };
 
 function closeMenu() {
@@ -170,17 +162,17 @@ function closeMenu() {
   if (m) m.style.display = "none";
 }
 
-window.goProfile = function () {
+window.goProfile = () => {
   closeMenu();
   location.href = "profile.html";
 };
 
-window.goHome = function () {
+window.goHome = () => {
   closeMenu();
   location.reload();
 };
 
-window.goAdmin = function () {
+window.goAdmin = () => {
   closeMenu();
 
   if (!user) return;
@@ -188,12 +180,11 @@ window.goAdmin = function () {
   if (user.email !== "nc.maxiboro@gmail.com") {
     alert("❌ Admin panel locked");
   } else {
-    alert("✅ Admin access");
     location.href = "admin.html";
   }
 };
 
 /* ================= LOGOUT ================= */
-window.logout = function () {
+window.logout = () => {
   signOut(auth).then(() => location.href = "index.html");
 };
