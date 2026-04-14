@@ -1,4 +1,4 @@
-import { auth, db, storage } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 
 import {
   onAuthStateChanged
@@ -6,45 +6,59 @@ import {
 
 import {
   doc,
-  getDoc
+  getDoc,
+  updateDoc,
+  addDoc,
+  collection
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+let currentUser = null;
+let lastPost = 0;
 
-// LOAD USER
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
+  if (!user) return window.location.href = "index.html";
 
-  document.getElementById("userEmail").innerText = user.email;
+  currentUser = user;
 
   const snap = await getDoc(doc(db, "users", user.uid));
-
-  document.getElementById("userPremium").innerText =
-    snap.data()?.premium ? "Premium 💎" : "Free User";
+  lastPost = snap.data()?.lastPost || 0;
 });
 
-// BACK
 window.goBack = () => window.location.href = "dashboard.html";
 
-// UPLOAD IMAGE
-window.uploadImage = async function () {
-  const file = document.getElementById("fileInput").files[0];
+// SAVE NAME
+window.saveName = async () => {
+  const name = document.getElementById("nicknameInput").value;
 
-  if (!file) return alert("Select file");
+  await updateDoc(doc(db, "users", currentUser.uid), {
+    nickname: name
+  });
 
-  const storageRef = ref(storage, "uploads/" + file.name);
+  alert("Saved!");
+};
 
-  await uploadBytes(storageRef, file);
+// POST
+window.createPost = async () => {
+  const text = document.getElementById("postText").value;
 
-  const url = await getDownloadURL(storageRef);
+  if (!text) return;
 
-  document.getElementById("imagePreview").innerHTML =
-    `<img src="${url}" width="100%">`;
+  const now = Date.now();
+
+  if (now - lastPost < 86400000) {
+    return alert("Only 1 post per day");
+  }
+
+  await addDoc(collection(db, "posts"), {
+    text,
+    user: currentUser.uid
+  });
+
+  await updateDoc(doc(db, "users", currentUser.uid), {
+    lastPost: now
+  });
+
+  lastPost = now;
+
+  alert("Posted!");
 };
