@@ -1,8 +1,8 @@
 import { auth, db } from "./firebase.js";
 
 import {
-  onAuthStateChanged,
-  signOut
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
@@ -10,85 +10,66 @@ import {
   addDoc,
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  doc,
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let user = null;
+const ADMIN_EMAIL = "nc.maxiboro@gmail.com";
 
-onAuthStateChanged(auth, (u) => {
-  if (!u) location.href = "index.html";
-  user = u;
+let currentUser = null;
 
-  loadFeed();
+/* ================= AUTH ================= */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = "index.html";
+    return;
+  }
+
+  currentUser = user;
+
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      email: user.email,
+      username: "User",
+    });
+  }
+
+  listenUsers();
 });
 
-/* ✅ FIXED FEED */
-window.sendMessage = async () => {
-  const input = document.getElementById("chatInput");
-  const text = input.value.trim();
-
-  if (!text) return;
-
-  await addDoc(collection(db, "posts"), {
-    text,
-    user: user.email.split("@")[0],
-    time: Date.now()
-  });
-
-  input.value = "";
-};
-
-function loadFeed() {
-  const q = query(collection(db, "posts"), orderBy("time"));
-
-  onSnapshot(q, (snap) => {
-    const box = document.getElementById("chatBox");
-    box.innerHTML = "";
-
-    snap.forEach(doc => {
-      const m = doc.data();
-
-      box.innerHTML += `
-        <div style="margin:6px 0;">
-          <b style="color:#5bc0be;">${m.user}</b>
-          <div style="color:#fff;">${m.text}</div>
-        </div>
-      `;
-    });
-
-    box.scrollTop = box.scrollHeight;
+/* ================= USERS COUNT ================= */
+function listenUsers() {
+  onSnapshot(collection(db, "users"), (snap) => {
+    document.getElementById("onlineUsers").innerText =
+      "🟢 Users Online: " + snap.size;
   });
 }
 
-/* MENU */
-window.toggleMenu = () => {
-  const m = document.getElementById("menu");
-  m.style.display = (m.style.display === "block") ? "none" : "block";
-};
-
-function closeMenu() {
-  document.getElementById("menu").style.display = "none";
-}
-
-window.goProfile = () => {
-  closeMenu();
-  location.href = "profile.html";
-};
-
-window.goHome = () => {
-  closeMenu();
-  location.reload();
-};
-
-window.goAdmin = () => {
-  closeMenu();
-  if (user.email !== "nc.maxiboro@gmail.com") {
-    alert("❌ Admin panel locked");
-  } else {
-    alert("✅ Admin access");
-  }
-};
-
+/* ================= NAV ================= */
 window.logout = () => {
   signOut(auth).then(() => location.href = "index.html");
+};
+
+/* 🔥 FIXED ADMIN BUTTON */
+window.goAdmin = () => {
+  if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+    alert("Admin access only");
+    return;
+  }
+  alert("Welcome to Admin Panel");
+};
+
+/* 🔥 RESTORED UPGRADE BUTTON */
+window.goUpgrade = () => {
+  window.open("https://nowpayments.io/payment/?iid=5153003613", "_blank");
+};
+
+/* 🔥 SUPPORT (DISABLED FOR NOW) */
+window.goSupport = () => {
+  alert("Support not configured yet");
 };
