@@ -1,59 +1,129 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>FAQ - MXM Crypto Empire</title>
+  <title>MCN Engine FAQ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b132b;
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #5bc0be;
+    }
+
+    .faq {
+      background: #1c2541;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .answer {
+      display: none;
+      margin-top: 10px;
+      color: #d1d1d1;
+      line-height: 1.6;
+    }
+
+    .cta {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    .cta button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 25px;
+      background: #5bc0be;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="navbar">
-  <h2 class="logo">FAQ ❓</h2>
-</div>
-
 <div class="container">
 
-  <div class="card">
+  <h1>MCN Engine FAQ</h1>
 
-    <h3>Frequently Asked Questions</h3>
+  <!-- FAQ 1 -->
+  <div class="faq" onclick="toggle(this)">
+    💰 What is MCN Engine?
+    <div class="answer">
+      MCN Engine is a monetization system that combines CPA marketing, content earning, and crypto-based tools to help users understand and access online income systems.
+    </div>
+  </div>
 
-    <p><b>1. Is MXM Crypto Empire an earning platform?</b><br>
-    No. It is an educational platform that shares tools and opportunities.</p>
+  <!-- FAQ 2 -->
+  <div class="faq" onclick="toggle(this)">
+    🚀 How do I start earning?
+    <div class="answer">
+      You can start by exploring the Earn section, completing basic actions, and upgrading to premium to unlock higher-value monetization tools and guides.
+    </div>
+  </div>
 
-    <p><b>2. Can I make money here?</b><br>
-    Not directly. You may earn through third-party platforms shared here.</p>
+  <!-- FAQ 3 -->
+  <div class="faq" onclick="toggle(this)">
+    🔒 Why are some features locked?
+    <div class="answer">
+      Some features are reserved for premium users to support system sustainability and unlock advanced earning tools, automation, and CPA systems.
+    </div>
+  </div>
 
-    <p><b>3. Are earnings guaranteed?</b><br>
-    No. There is no guarantee of income.</p>
+  <!-- FAQ 4 -->
+  <div class="faq" onclick="toggle(this)">
+    💳 Do I need to pay to use MCN Engine?
+    <div class="answer">
+      No. You can start for free. However, premium unlocks higher earning potential, better tools, and faster monetization pathways.
+    </div>
+  </div>
 
-    <p><b>4. Is it free to use?</b><br>
-    Yes, basic access is free.</p>
+  <!-- FAQ 5 -->
+  <div class="faq" onclick="toggle(this)">
+    📈 How much can I earn?
+    <div class="answer">
+      Earnings depend on traffic, engagement, and user activity. MCN Engine provides tools and systems, but results vary per user effort and strategy.
+    </div>
+  </div>
 
-    <p><b>5. What is Version 2?</b><br>
-    It unlocks advanced features and premium tools.</p>
+  <!-- FAQ 6 (CONVERSION PUSH) -->
+  <div class="faq" onclick="toggle(this)">
+    🔥 Why should I upgrade to Premium?
+    <div class="answer">
+      Premium unlocks advanced monetization tools, CPA optimization features, and priority access to earning systems designed for higher conversion potential.
+    </div>
+  </div>
 
-    <p><b>6. Can I post content?</b><br>
-    Yes, but limited to once per day in Version 1.</p>
-
-    <p><b>7. Can I add links?</b><br>
-    No. Links are only available in Version 2.</p>
-
-    <p><b>8. Is my data safe?</b><br>
-    We use Firebase for security, but always stay cautious online.</p>
-
-    <p><b>9. Can I contact support?</b><br>
-    Yes, via the support section.</p>
-
-    <p><b>10. Will more features be added?</b><br>
-    Yes, future updates will include more tools and upgrades.</p>
-
+  <div class="cta">
+    <p>Ready to start earning smarter?</p>
+    <button onclick="location.href='dashboard.html'">
+      🚀 Go to Dashboard
+    </button>
   </div>
 
 </div>
 
-<!-- FLOAT BACK BUTTON -->
-<button class="back-float" onclick="history.back()">←</button>
+<script>
+function toggle(el) {
+  const ans = el.querySelector(".answer");
+  ans.style.display = ans.style.display === "block" ? "none" : "block";
+}
+</script>
 
 </body>
 </html>
