@@ -1,6 +1,119 @@
-<script>
-/* ================= MXM ENGINE SAFE LOAD SYSTEM ================= */
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MXM Crypto Blog</title>
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="MXM Blog - Crypto news, earning guides, CPA marketing insights and digital finance strategies.">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b132b;
+      color: #fff;
+    }
+
+    .header {
+      background: #1c2541;
+      padding: 15px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      color: #5bc0be;
+    }
+
+    .sub {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .container {
+      padding: 15px;
+    }
+
+    .card {
+      background: #1c2541;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .content {
+      padding: 12px;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #5bc0be;
+    }
+
+    .text {
+      font-size: 13px;
+      opacity: 0.85;
+      line-height: 1.4;
+    }
+
+    .tag {
+      font-size: 10px;
+      background: #5bc0be;
+      color: #000;
+      padding: 3px 6px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .back {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      background: #5bc0be;
+      color: #000;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>MXM CRYPTO INSIGHTS</h1>
+  <div class="sub">Crypto • Earnings • CPA Marketing</div>
+</div>
+
+<div class="container" id="blogContainer">
+  <div class="loading">Loading articles...</div>
+</div>
+
+<button class="back" onclick="location.href='../dashboard.html'">← Back</button>
+
+<script>
+
+/* ================= LOAD BLOGS ================= */
 async function loadBlogs() {
   try {
     const res = await fetch("https://mxm-backend.onrender.com/blog/list");
@@ -9,35 +122,42 @@ async function loadBlogs() {
     const container = document.getElementById("blogContainer");
     container.innerHTML = "";
 
-    if (!data || !data.length) {
+    if (!data.length) {
       container.innerHTML = "<p>No articles yet.</p>";
       return;
     }
 
     data.forEach(post => {
+
+      // 🔥 V10 VIEW TRACKING (SAFE)
+      fetch(`https://mxm-backend.onrender.com/blog/view/${post.id}`, {
+        method: "POST"
+      });
+
       container.innerHTML += `
         <div class="card">
+
           ${post.image ? `<img src="${post.image}">` : ""}
+
           <div class="content">
             <div class="tag">MXM UPDATE</div>
             <div class="title">${post.title}</div>
             <div class="text">${post.content}</div>
           </div>
+
         </div>
       `;
     });
 
-    // SAFE CALL: ads injected AFTER blogs render
     loadAds();
 
   } catch (err) {
     document.getElementById("blogContainer").innerHTML =
-      "<p>Failed to load articles.</p>";
+      "<p>Failed to load blog posts.</p>";
   }
 }
 
-/* ================= MXM ADS SYSTEM (NON-DESTRUCTIVE ADD-ON) ================= */
-
+/* ================= ADS SYSTEM V10 ================= */
 async function loadAds() {
   try {
     const res = await fetch("https://mxm-backend.onrender.com/ads/list");
@@ -45,26 +165,69 @@ async function loadAds() {
 
     const container = document.getElementById("blogContainer");
 
-    if (!ads || !ads.length) return;
-
     ads.forEach(ad => {
+
+      // 🔥 V10 IMPRESSION TRACKING
+      if (ad.id) {
+        fetch(`https://mxm-backend.onrender.com/ads/impression/${ad.id}`, {
+          method: "POST"
+        });
+      }
+
       container.innerHTML += `
         <div class="card" style="border:1px dashed #5bc0be;">
           <div class="content">
             <div class="tag">ADVERTISEMENT</div>
             <div class="title">${ad.title}</div>
             <div class="text">${ad.text}</div>
-            <button onclick="location.href='${ad.link}'">Open</button>
+
+            <button onclick="handleAdClick('${ad.id}', '${ad.link}')">
+              Open
+            </button>
+
           </div>
         </div>
       `;
     });
 
   } catch (err) {
-    console.log("Ads failed to load:", err.message);
+    console.log("Ad load error");
   }
 }
 
-/* INIT */
+/* ================= AD CLICK TRACK ================= */
+function handleAdClick(id, link) {
+
+  if (id) {
+    fetch(`https://mxm-backend.onrender.com/ads/click/${id}`, {
+      method: "POST"
+    });
+  }
+
+  window.location.href = link;
+}
+
+/* ================= USER TRACKING (V10 CORE) ================= */
+function trackUser() {
+  const uid = localStorage.getItem("uid") || "guest";
+
+  fetch("https://mxm-backend.onrender.com/track/session", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      uid: uid,
+      page: "blog"
+    })
+  });
+}
+
+/* ================= INIT ================= */
+trackUser();
 loadBlogs();
+
 </script>
+
+</body>
+</html>
