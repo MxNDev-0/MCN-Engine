@@ -11,7 +11,8 @@ import {
   onSnapshot,
   query,
   orderBy,
-  doc
+  doc,
+  getDoc // ✅ ADDED (SAFE)
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let user = null;
@@ -123,15 +124,13 @@ async function loadCryptoPrices() {
 
 setInterval(loadCryptoPrices, 30000);
 
-/* ================= UPGRADE SYSTEM (FULL DEBUG FIX) ================= */
+/* ================= UPGRADE SYSTEM ================= */
 async function handleUpgrade() {
   try {
     if (!user) {
       alert("Login required");
       return;
     }
-
-    console.log("UPGRADE CLICKED");
 
     const token = await user.getIdToken();
 
@@ -145,9 +144,6 @@ async function handleUpgrade() {
 
     const data = await response.json();
 
-    console.log("STATUS:", response.status);
-    console.log("RESPONSE:", data);
-
     if (!response.ok) {
       alert("ERROR: " + JSON.stringify(data));
       return;
@@ -156,11 +152,10 @@ async function handleUpgrade() {
     if (data.payment_url) {
       window.location.href = data.payment_url;
     } else {
-      alert("No payment URL returned: " + JSON.stringify(data));
+      alert("No payment URL returned");
     }
 
   } catch (err) {
-    console.error("UPGRADE ERROR:", err);
     alert("Something went wrong: " + err.message);
   }
 }
@@ -189,15 +184,25 @@ window.goHome = () => {
   location.reload();
 };
 
-window.goAdmin = () => {
+/* ================= ADMIN ACCESS (UPGRADED SAFE) ================= */
+window.goAdmin = async () => {
   closeMenu();
 
   if (!user) return;
 
-  if (user.email !== "nc.maxiboro@gmail.com") {
-    alert("❌ Admin locked");
-  } else {
-    location.href = "admin.html";
+  try {
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
+
+    if (snap.exists() && snap.data().role === "admin") {
+      location.href = "admin.html";
+    } else {
+      alert("❌ Admin locked");
+    }
+
+  } catch (err) {
+    console.error("Admin check error:", err);
+    alert("Error checking admin access");
   }
 };
 
