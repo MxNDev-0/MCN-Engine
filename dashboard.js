@@ -20,6 +20,7 @@ import {
 
 let user = null;
 let userData = null;
+let isUserReady = false; // 🔒 FIX: state gate
 
 /* ================= AUTH ================= */
 onAuthStateChanged(auth, async (u) => {
@@ -33,7 +34,8 @@ onAuthStateChanged(auth, async (u) => {
   await ensureUser();
   await loadUser();
 
-  // 🔒 LOCK UI AFTER USER LOAD
+  isUserReady = true; // 🔥 FIX: unlock system after load
+
   applyUIRestrictions();
 
   loadUsers();
@@ -60,22 +62,18 @@ async function loadUser() {
   if (snap.exists()) userData = snap.data();
 }
 
-/* ================= 🔒 UI LOCK SYSTEM ================= */
+/* ================= UI LOCK SYSTEM ================= */
 function applyUIRestrictions() {
   if (!userData) return;
 
   const premiumButtons = document.querySelectorAll(".premium-only");
   if (!isPremiumAllowed(userData)) {
-    premiumButtons.forEach(btn => {
-      btn.style.display = "none";
-    });
+    premiumButtons.forEach(btn => btn.style.display = "none");
   }
 
   const adsSection = document.querySelectorAll(".ads-only");
   if (!isAllowed("ads", userData)) {
-    adsSection.forEach(el => {
-      el.style.display = "none";
-    });
+    adsSection.forEach(el => el.style.display = "none");
   }
 
   if (!isAllowed("chat", userData)) {
@@ -138,6 +136,8 @@ function loadFeed() {
 
 /* ================= SEND MESSAGE ================= */
 window.sendMessage = async function () {
+  if (!isUserReady) return; // 🔥 FIX: prevent early execution
+
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
 
@@ -178,8 +178,7 @@ window.goFaq = () => location.href = "faq.html";
 window.goAbout = () => location.href = "about.html";
 window.goBlog = () => location.href = "blog/index.html";
 
-
-/* ================= 🔒 CLICK GUARD SYSTEM (INJECTED — NO CORE CHANGES) ================= */
+/* ================= 🔒 CLICK GUARD (SAFE FIXED VERSION) ================= */
 
 function showToast(msg) {
   const el = document.createElement("div");
@@ -197,24 +196,20 @@ function showToast(msg) {
   el.style.fontSize = "13px";
 
   document.body.appendChild(el);
-
   setTimeout(() => el.remove(), 2000);
 }
 
-/* PREMIUM CLICK BLOCK */
+/* ONLY RUN WHEN USER IS READY */
 document.addEventListener("click", (e) => {
-  const premiumBtn = e.target.closest(".premium-only");
+  if (!isUserReady) return;
 
+  const premiumBtn = e.target.closest(".premium-only");
   if (premiumBtn && !userData?.isPremium) {
     e.preventDefault();
     showToast("🔒 Premium only feature");
   }
-});
 
-/* ADS CLICK BLOCK */
-document.addEventListener("click", (e) => {
   const ads = e.target.closest(".ads-only");
-
   if (ads && !isAllowed("ads", userData)) {
     e.preventDefault();
     showToast("📢 Ads feature locked");
