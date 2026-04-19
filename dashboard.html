@@ -6,7 +6,6 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- 🔥 FIX: ensures menu always appears above everything -->
   <style>
     .menu {
       z-index: 9999;
@@ -26,20 +25,25 @@
   <button onclick="logout()">Logout</button>
 </div>
 
+<!-- MENU -->
 <div id="menu" class="menu">
   <button onclick="goHome()">Home</button>
   <button onclick="goProfile()">Profile</button>
+
+  <!-- ADMIN ONLY -->
   <button onclick="goAdmin()">Admin</button>
-  <button onclick="goPremium()">Upgrade 🚀</button>
+
+  <!-- REPLACED PREMIUM -->
+  <button onclick="goAdSpace()">Buy Ad Space 🚀</button>
+
   <button onclick="support()">Support 💰</button>
 
-  <!-- NAV FIXED LINKS -->
   <button onclick="goFaq()">FAQ</button>
   <button onclick="goAbout()">About</button>
   <button onclick="goBlog()">Blog</button>
 
-  <!-- 🔥 PREMIUM SYSTEM READY HOOK (SAFE PLACE FOR NEXT UPGRADE) -->
-  <button class="premium-only" onclick="openDeveloper()">Developer 💻</button>
+  <!-- NEW MONETIZATION FEATURE -->
+  <button onclick="openDeveloper()">Developer 💻</button>
 </div>
 
 <div class="container">
@@ -66,12 +70,13 @@
     </div>
   </div>
 
-  <!-- 🔥 ADS SYSTEM READY (ENGINE v15 HOOK) -->
+  <!-- ADS SECTION (KEEP THIS FOR MONEY) -->
   <div class="card ads-only">
-    <h4>📢 Sponsored</h4>
-    <p>Advertise your business here</p>
+    <h4>📢 Sponsored Space</h4>
+    <p>Buy this space to promote your business</p>
   </div>
 
+  <!-- EARN -->
   <div class="card earn-card">
     <h4>💰 Earn</h4>
     <button onclick="location.href='earn/index.html'">Open Earn</button>
