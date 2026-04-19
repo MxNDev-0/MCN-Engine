@@ -36,7 +36,7 @@ onAuthStateChanged(auth, async (u) => {
   loadCryptoPrices();
 });
 
-/* ================= USER PROFILE INIT (SAFE FIX) ================= */
+/* ================= USER PROFILE INIT ================= */
 async function ensureUserProfile() {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
@@ -108,7 +108,7 @@ function loadUsers() {
   });
 }
 
-/* ================= FEED ================= */
+/* ================= FEED (FIXED FULL VERSION) ================= */
 function loadFeed() {
   const q = query(collection(db, "posts"), orderBy("time"));
 
@@ -119,15 +119,16 @@ function loadFeed() {
 
     box.innerHTML = "";
 
-    let hasPosts = false;
+    let validPosts = 0;
 
     snap.forEach(docSnap => {
       const m = docSnap.data();
 
-      if (!m || !m.text) return;
+      if (!m) return;
+      if (!m.text || m.text.trim() === "") return;
       if (m.visibility === "private") return;
 
-      hasPosts = true;
+      validPosts++;
 
       box.innerHTML += `
         <div style="margin:6px 0;">
@@ -137,8 +138,8 @@ function loadFeed() {
       `;
     });
 
-    if (!hasPosts) {
-      box.innerHTML = "<p style='opacity:0.6;'>No posts yet...</p>";
+    if (validPosts === 0) {
+      box.innerHTML = "<p style='opacity:0.6;'>No messages yet...</p>";
     }
 
     box.scrollTop = box.scrollHeight;
@@ -231,29 +232,15 @@ window.toggleMenu = () => {
 window.goProfile = () => location.href = "profile.html";
 window.goHome = () => location.reload();
 
-/* ================= ADMIN FIX (FULL OVERRIDE) ================= */
+/* ================= ADMIN ================= */
 window.goAdmin = async () => {
   const snap = await getDoc(doc(db, "users", user.uid));
 
-  if (!snap.exists()) {
-    alert("❌ User not ready");
-    return;
-  }
-
-  const data = snap.data();
-  const email = user.email || "";
-
-  const isOwner =
-    email.includes("mxn") ||
-    email.includes("MXN") ||
-    data.username === "MXNDev-0";
-
-  if (isOwner || data.role === "admin") {
+  if (snap.exists() && snap.data().role === "admin") {
     location.href = "admin.html";
-    return;
+  } else {
+    alert("❌ Admin locked");
   }
-
-  alert("❌ Admin locked");
 };
 
 /* ================= LOGOUT ================= */
