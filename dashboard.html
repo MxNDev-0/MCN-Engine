@@ -5,55 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="ui-theme.css">
-
-  <style>
-    .user-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px;
-      margin: 6px 0;
-      background: #0b132b;
-      border-radius: 8px;
-      font-size: 13px;
-    }
-
-    .user-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .online {
-      background: #22c55e;
-    }
-
-    .offline {
-      background: #555;
-    }
-
-    .badge {
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 6px;
-      background: gold;
-      color: black;
-    }
-  </style>
 </head>
 
 <body>
 
 <div class="navbar">
   <button onclick="toggleMenu()">☰</button>
-  <h3 style="margin:0 auto;">MCN Engine</h3>
+  <h3>MCN Engine</h3>
   <button onclick="logout()">Logout</button>
 </div>
 
@@ -61,62 +19,37 @@
   <button onclick="goHome()">Home</button>
   <button onclick="goProfile()">Profile</button>
   <button onclick="goAdmin()">Admin</button>
-  <button onclick="goPremium()">Upgrade 🚀</button>
-  <button onclick="location.href='blog/index.html'">📚 Blog</button>
-  <button onclick="support()">Support 💰</button>
-  <button onclick="location.href='faq.html'">FAQ</button>
-  <button onclick="location.href='about.html'">About</button>
+  <button onclick="goPremium()">Upgrade</button>
+  <button onclick="support()">Support</button>
 </div>
 
 <div class="container">
 
-  <!-- USERS PANEL (UPGRADED) -->
   <div class="card">
     <h4>🟢 Live Users</h4>
     <div id="onlineUsers"></div>
   </div>
 
-  <!-- WALLET -->
   <div class="card">
-    <h4>💰 Portfolio Wallet</h4>
-    <p>Balance: $<span id="walletBalance">0</span></p>
-    <p>Last Update: <span id="walletUpdated">-</span></p>
-
-    <hr>
-
-    <h4>📊 Live Crypto</h4>
-    <p id="btcPrice">Loading...</p>
+    <h4>💰 Wallet</h4>
+    <p>$<span id="walletBalance">0</span></p>
+    <p id="walletUpdated">-</p>
   </div>
 
-  <!-- FEED -->
   <div class="card">
     <h4>💬 Community Feed</h4>
 
-    <div id="chatBox" style="
-      height:220px;
-      overflow-y:auto;
-      background:#0b132b;
-      padding:10px;
-      border-radius:8px;
-    "></div>
+    <div id="chatBox"></div>
 
     <div class="row">
-      <input id="chatInput" placeholder="Write something..." style="max-width:70%;">
-      <button style="width:auto;padding:6px 10px;" onclick="sendMessage()">Post</button>
+      <input id="chatInput" placeholder="Write something...">
+      <button onclick="sendMessage()">Post</button>
     </div>
   </div>
 
-  <!-- EARN -->
   <div class="card earn-card">
-    <h4>💰 Earnings Hub</h4>
-
-    <p style="font-size:14px; opacity:0.9;">
-      Access monetization pages like ForFans, CPA guides and trading tools.
-    </p>
-
-    <button onclick="location.href='earn/index.html'">
-      🚀 Open Earn Section
-    </button>
+    <h4>💰 Earn</h4>
+    <button onclick="location.href='earn/index.html'">Open Earn</button>
   </div>
 
 </div>
