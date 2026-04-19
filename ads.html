@@ -85,17 +85,31 @@
       margin: 10px 0;
     }
 
+    /* ✅ STEP 1 — NEW BACK BUTTON STYLE */
     .back {
       position: fixed;
-      bottom: 15px;
-      right: 15px;
+      bottom: 18px;
+      right: 18px;
+
+      background: rgba(91, 192, 190, 0.15);
+      color: #5bc0be;
+
+      border: 1px solid #5bc0be;
+      padding: 6px 10px;
+
+      font-size: 12px;
+      border-radius: 8px;
+
+      cursor: pointer;
+
+      transition: 0.2s ease;
+      backdrop-filter: blur(6px);
+    }
+
+    .back:hover {
       background: #5bc0be;
       color: #000;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 50px;
-      font-weight: bold;
-      cursor: pointer;
+      transform: scale(1.05);
     }
   </style>
 </head>
@@ -124,7 +138,8 @@
   <div class="card">
     <h3>💰 Pricing</h3>
 
-    <div class="price-tag">$10 / 7 Days</div>
+    <!-- ✅ STEP 2 — DYNAMIC PRICE -->
+    <div class="price-tag" id="priceTag">$10 / 7 Days</div>
 
     <div class="info-box">
       • Homepage Ad Slot<br>
@@ -143,9 +158,9 @@
     <input id="adLink" placeholder="Target Link (https://...)">
 
     <select id="adDuration">
-      <option value="7d">7 Days</option>
-      <option value="14d">14 Days</option>
-      <option value="30d">30 Days</option>
+      <option value="7">7 Days</option>
+      <option value="14">14 Days</option>
+      <option value="30">30 Days</option>
     </select>
 
     <button onclick="buyAd()">Proceed to Payment 🚀</button>
@@ -166,6 +181,7 @@
 
 </div>
 
+<!-- ✅ STEP 1 BUTTON -->
 <button class="back" onclick="location.href='dashboard.html'">← Back</button>
 
 <script type="module">
@@ -174,12 +190,34 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 
 const API = "https://mxm-backend.onrender.com";
 
+/* ================= STEP 2 — PRICE CALCULATOR ================= */
+function calculatePrice(days) {
+  const base = 10;
+
+  if (days == 7) return base;
+  if (days == 14) return base * 1.8;
+  if (days == 30) return base * 3;
+
+  return base;
+}
+
+/* LIVE PRICE UPDATE */
+document.getElementById("adDuration").addEventListener("change", function () {
+  const days = Number(this.value);
+  const price = calculatePrice(days);
+
+  document.getElementById("priceTag").innerText =
+    `$${price.toFixed(2)} / ${days} Days`;
+});
+
 /* ================= BUY AD ================= */
 window.buyAd = async function () {
   const title = document.getElementById("adTitle").value.trim();
   const text = document.getElementById("adText").value.trim();
   const link = document.getElementById("adLink").value.trim();
-  const duration = document.getElementById("adDuration").value;
+  const duration = Number(document.getElementById("adDuration").value);
+
+  const price = calculatePrice(duration); // ✅ STEP 3 FIX
 
   if (!title || !text || !link) {
     alert("Please fill all fields");
@@ -206,7 +244,8 @@ window.buyAd = async function () {
           title,
           text,
           link,
-          duration
+          duration,
+          price   // ✅ IMPORTANT FIX
         })
       });
 
