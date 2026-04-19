@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MXM Crypto Blog</title>
+  <title>MCN Engine Blog</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="description" content="MXM Blog - Crypto news, earning guides, CPA marketing insights and digital finance strategies.">
+  <meta name="description" content="MCN Engine Blog - Crypto news, earning guides, CPA marketing insights and digital finance strategies.">
 
   <style>
     body {
@@ -101,7 +101,7 @@
 <body>
 
 <div class="header">
-  <h1>MXM CRYPTO INSIGHTS</h1>
+  <h1>MCN ENGINE INSIGHTS</h1>
   <div class="sub">Crypto • Earnings • CPA Marketing</div>
 </div>
 
@@ -112,6 +112,22 @@
 <button class="back" onclick="location.href='../dashboard.html'">← Back</button>
 
 <script>
+
+/* ================= USER TRACKING ================= */
+function trackUser() {
+  const uid = localStorage.getItem("uid") || "guest";
+
+  fetch("https://mxm-backend.onrender.com/track/session", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      uid: uid,
+      page: "blog"
+    })
+  });
+}
 
 /* ================= LOAD BLOGS ================= */
 async function loadBlogs() {
@@ -129,7 +145,7 @@ async function loadBlogs() {
 
     data.forEach(post => {
 
-      // 🔥 V10 VIEW TRACKING (SAFE)
+      // VIEW TRACKING (non-blocking)
       fetch(`https://mxm-backend.onrender.com/blog/view/${post.id}`, {
         method: "POST"
       });
@@ -140,7 +156,7 @@ async function loadBlogs() {
           ${post.image ? `<img src="${post.image}">` : ""}
 
           <div class="content">
-            <div class="tag">MXM UPDATE</div>
+            <div class="tag">MCN UPDATE</div>
             <div class="title">${post.title}</div>
             <div class="text">${post.content}</div>
           </div>
@@ -149,6 +165,7 @@ async function loadBlogs() {
       `;
     });
 
+    // IMPORTANT: ADS LOAD AFTER BLOGS
     loadAds();
 
   } catch (err) {
@@ -157,7 +174,7 @@ async function loadBlogs() {
   }
 }
 
-/* ================= ADS SYSTEM V10 ================= */
+/* ================= ADS SYSTEM (UPDATED CLEAN VERSION) ================= */
 async function loadAds() {
   try {
     const res = await fetch("https://mxm-backend.onrender.com/ads/list");
@@ -167,17 +184,12 @@ async function loadAds() {
 
     ads.forEach(ad => {
 
-      // 🔥 V10 IMPRESSION TRACKING
-      if (ad.id) {
-        fetch(`https://mxm-backend.onrender.com/ads/impression/${ad.id}`, {
-          method: "POST"
-        });
-      }
-
       container.innerHTML += `
         <div class="card" style="border:1px dashed #5bc0be;">
           <div class="content">
-            <div class="tag">ADVERTISEMENT</div>
+
+            <div class="tag">SPONSORED</div>
+
             <div class="title">${ad.title}</div>
             <div class="text">${ad.text}</div>
 
@@ -191,36 +203,17 @@ async function loadAds() {
     });
 
   } catch (err) {
-    console.log("Ad load error");
+    console.log("Ads failed");
   }
 }
 
-/* ================= AD CLICK TRACK ================= */
+/* ================= AD CLICK TRACKING ================= */
 function handleAdClick(id, link) {
-
-  if (id) {
-    fetch(`https://mxm-backend.onrender.com/ads/click/${id}`, {
-      method: "POST"
-    });
-  }
+  fetch(`https://mxm-backend.onrender.com/ads/click/${id}`, {
+    method: "POST"
+  });
 
   window.location.href = link;
-}
-
-/* ================= USER TRACKING (V10 CORE) ================= */
-function trackUser() {
-  const uid = localStorage.getItem("uid") || "guest";
-
-  fetch("https://mxm-backend.onrender.com/track/session", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      uid: uid,
-      page: "blog"
-    })
-  });
 }
 
 /* ================= INIT ================= */
