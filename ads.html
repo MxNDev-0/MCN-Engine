@@ -1,29 +1,230 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Advertise</title>
+  <title>MCN Engine - Buy Ad Space</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b132b;
+      color: #fff;
+    }
+
+    .header {
+      background: #1c2541;
+      padding: 15px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+    }
+
+    .header h2 {
+      margin: 0;
+      color: #5bc0be;
+    }
+
+    .container {
+      padding: 15px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .card {
+      background: #1c2541;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: #0b132b;
+      color: white;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #5bc0be;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .info-box {
+      background: #0b132b;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      opacity: 0.85;
+      line-height: 1.5;
+    }
+
+    .price-tag {
+      font-size: 18px;
+      color: #5bc0be;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .back {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      background: #5bc0be;
+      color: #000;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
+<div class="header">
+  <h2>📢 Buy Ad Space</h2>
+</div>
+
 <div class="container">
 
+  <!-- INTRO -->
   <div class="card">
-    <h3>📢 Advertise Your Business</h3>
+    <h3>Advertise on MCN Engine</h3>
 
-    <p>Place your ad on MCN Engine dashboard.</p>
+    <div class="info-box">
+      🚀 Reach active users instantly<br>
+      💰 Promote your business or offer<br>
+      📊 Appear in dashboard + blog section<br>
+      ⚡ Instant exposure after payment approval
+    </div>
+  </div>
 
-    <p>Reach active users instantly.</p>
+  <!-- PRICING -->
+  <div class="card">
+    <h3>💰 Pricing</h3>
 
-    <button onclick="window.location.href='https://t.me/youradcontact'">
-      Submit Ad (Crypto Only)
-    </button>
+    <div class="price-tag">$10 / 7 Days</div>
 
+    <div class="info-box">
+      • Homepage Ad Slot<br>
+      • Blog Ads Placement<br>
+      • Dashboard Sponsored Section<br>
+      • Click + Impression Tracking
+    </div>
+  </div>
+
+  <!-- CREATE AD -->
+  <div class="card">
+    <h3>📝 Create Your Ad</h3>
+
+    <input id="adTitle" placeholder="Ad Title">
+    <textarea id="adText" placeholder="Ad Description"></textarea>
+    <input id="adLink" placeholder="Target Link (https://...)">
+
+    <select id="adDuration">
+      <option value="7d">7 Days</option>
+      <option value="14d">14 Days</option>
+      <option value="30d">30 Days</option>
+    </select>
+
+    <button onclick="buyAd()">Proceed to Payment 🚀</button>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="card">
+    <h3>⚙️ How It Works</h3>
+
+    <div class="info-box">
+      1. Fill ad details<br>
+      2. Click payment button<br>
+      3. Complete crypto payment<br>
+      4. Ad is activated automatically<br>
+      5. Starts showing instantly after approval
+    </div>
   </div>
 
 </div>
+
+<button class="back" onclick="location.href='dashboard.html'">← Back</button>
+
+<script type="module">
+import { auth } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const API = "https://mxm-backend.onrender.com";
+
+/* ================= BUY AD ================= */
+window.buyAd = async function () {
+  const title = document.getElementById("adTitle").value.trim();
+  const text = document.getElementById("adText").value.trim();
+  const link = document.getElementById("adLink").value.trim();
+  const duration = document.getElementById("adDuration").value;
+
+  if (!title || !text || !link) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      alert("Please login first");
+      location.href = "index.html";
+      return;
+    }
+
+    const token = await user.getIdToken();
+
+    try {
+      const res = await fetch(`${API}/create-ad-payment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          title,
+          text,
+          link,
+          duration
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        alert("Payment failed");
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
+    }
+  });
+};
+</script>
 
 </body>
 </html>
