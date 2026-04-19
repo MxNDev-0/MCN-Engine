@@ -107,7 +107,7 @@ function loadUsers() {
   });
 }
 
-/* ================= FEED (FIXED CHAT SAFE VERSION) ================= */
+/* ================= FEED (FIXED CHAT) ================= */
 function loadFeed() {
   const box = document.getElementById("chatBox");
   if (!box) return;
@@ -124,7 +124,9 @@ function loadFeed() {
 
       if (!m) return;
       if (!m.text) return;
-      if (m.visibility === "public") return;
+
+      // ✅ FIXED: only hide private messages
+      if (m.visibility === "private") return;
 
       count++;
 
