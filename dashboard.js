@@ -13,7 +13,8 @@ import {
   orderBy,
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let user = null;
@@ -30,6 +31,12 @@ onAuthStateChanged(auth, async (u) => {
 
   await ensureUserProfile();
   await loadUserData();
+
+  if (!userData) {
+    console.error("User data not loaded");
+    return;
+  }
+
   await registerOnline();
 
   loadUsers();
@@ -79,7 +86,7 @@ async function registerOnline() {
     uid: user.uid,
     username: name,
     lastActive: Date.now()
-  });
+  }, { merge: true });
 }
 
 /* ================= USERS ================= */
@@ -118,6 +125,8 @@ function loadFeed() {
   );
 
   onSnapshot(q, (snap) => {
+    console.log("Feed docs:", snap.size);
+
     box.innerHTML = "";
 
     if (snap.empty) {
@@ -129,7 +138,8 @@ function loadFeed() {
 
     snap.forEach(docSnap => {
       const m = docSnap.data();
-      if (!m || !m.text) return;
+
+      if (!m || !m.text || !m.time) return;
 
       const visibility = m.visibility || "public";
 
@@ -170,7 +180,7 @@ window.sendMessage = async () => {
     text,
     user: name,
     visibility: "public",
-    time: Date.now()
+    time: serverTimestamp()
   });
 
   input.value = "";
@@ -195,27 +205,29 @@ function setupDebugAccess() {
       const snap = await getDoc(doc(db, "users", user.uid));
       console.log("User Data:", snap.data());
 
+      console.log("Project:", db.app.options.projectId);
+
       console.log("✅ Debug Complete");
     };
-  } else {
-    console.log("No debug access");
   }
 }
 
-/* ================= MENU (FIXED) ================= */
-window.toggleMenu = function () {
+/* ================= MENU ================= */
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("menuBtn");
   const menu = document.getElementById("menu");
-  if (!menu) return;
 
-  menu.classList.toggle("active");
-};
-
-/* ================= LOGOUT (FIXED) ================= */
-window.logout = async function () {
-  try {
-    await signOut(auth);
-    location.href = "index.html";
-  } catch (err) {
-    console.error("Logout failed:", err);
+  if (btn && menu) {
+    btn.addEventListener("click", () => {
+      menu.classList.toggle("active");
+    });
   }
-};
+
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      location.href = "index.html";
+    });
+  }
+});
