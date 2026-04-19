@@ -111,10 +111,15 @@ function loadFeed() {
   const box = document.getElementById("chatBox");
   if (!box) return;
 
-  const q = query(collection(db, "posts"));
+  const q = query(collection(db, "posts"), orderBy("time"));
 
   onSnapshot(q, (snap) => {
     box.innerHTML = "";
+
+    if (snap.empty) {
+      box.innerHTML = "<p style='opacity:0.6;'>No messages yet...</p>";
+      return;
+    }
 
     let count = 0;
 
@@ -123,8 +128,10 @@ function loadFeed() {
 
       if (!m || !m.text) return;
 
-      // ✅ FIXED: only hide PRIVATE posts
-      if (m.visibility === "private") return;
+      // ✅ SAFE DEFAULT RULE (VERY IMPORTANT FIX)
+      const visibility = m.visibility || "public";
+
+      if (visibility === "private") return;
 
       count++;
 
@@ -137,10 +144,13 @@ function loadFeed() {
     });
 
     if (count === 0) {
-      box.innerHTML = "<p style='opacity:0.6;'>No messages yet...</p>";
+      box.innerHTML = "<p style='opacity:0.6;'>No visible messages</p>";
     }
 
     box.scrollTop = box.scrollHeight;
+  }, (err) => {
+    console.error("Feed error:", err);
+    box.innerHTML = "<p style='color:red;'>Failed to load chat</p>";
   });
 }
 
