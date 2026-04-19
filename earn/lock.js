@@ -4,9 +4,10 @@ import { db } from "../firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-let checked = false;
+let isPremiumUser = false;
+let isChecked = false;
 
-/* ================= GLOBAL LOCK ================= */
+/* ================= GLOBAL AUTH CHECK ================= */
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -15,24 +16,51 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  const ref = doc(db, "users", user.uid);
-  const snap = await getDoc(ref);
+  try {
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
 
-  const isPremium = snap.exists() && snap.data().premium === true;
+    if (snap.exists()) {
+      const data = snap.data();
 
-  if (!isPremium) {
+      // store premium state safely
+      isPremiumUser = data.premium === true;
+    } else {
+      isPremiumUser = false;
+    }
 
-    alert(
-      "⚠️ PREMIUM REQUIRED\n\n" +
-      "This earning feature is locked.\n\n" +
-      "Upgrade to access tools.\n\n" +
-      "Payments are NON-REFUNDABLE and results are NOT guaranteed."
-    );
+    isChecked = true;
 
-    location.href = "../dashboard.html";
-    return;
+    console.log("LOCK CHECK COMPLETE:", {
+      user: user.uid,
+      premium: isPremiumUser
+    });
+
+  } catch (err) {
+    console.error("Lock check error:", err);
+
+    // IMPORTANT: do NOT block app on error
+    isPremiumUser = false;
+    isChecked = true;
+  }
+});
+
+/* ================= GLOBAL HELPER ================= */
+/*
+Use this inside your earning pages ONLY
+NOT dashboard, NOT chat
+*/
+window.requirePremium = function () {
+
+  if (!isChecked) {
+    alert("System still loading...");
+    return false;
   }
 
-  /* ✅ ACCESS GRANTED */
-  checked = true;
-});
+  if (!isPremiumUser) {
+    alert("⚠️ Premium required to access this feature.");
+    return false;
+  }
+
+  return true;
+};
