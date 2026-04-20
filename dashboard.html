@@ -88,7 +88,7 @@
   <button onclick="logout()">Logout</button>
 </div>
 
-<!-- MENU (REORDERED LOGICALLY) -->
+<!-- MENU -->
 <div id="menu" class="menu">
   <button onclick="goHome()">🏠 Home</button>
   <button onclick="goProfile()">👤 Profile</button>
@@ -103,7 +103,6 @@
 
   <button onclick="openDeveloper()">💻 Developer</button>
 
-  <!-- ADMIN LAST (SECURE + CLEAN) -->
   <button onclick="goAdmin()">🔐 Admin</button>
 </div>
 
@@ -126,8 +125,11 @@
 
     <div id="chatBox"></div>
 
-    <!-- ADS SEPARATED -->
+    <!-- ADS -->
     <div id="adsBox"></div>
+
+    <!-- ✅ TYPING INDICATOR (INJECTED HERE) -->
+    <div id="typingBox" style="font-size:12px;opacity:0.6;margin-top:5px;"></div>
 
     <div class="row">
       <input id="chatInput" placeholder="Write something...">
