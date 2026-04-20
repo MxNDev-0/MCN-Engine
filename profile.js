@@ -1,280 +1,304 @@
-import { auth, db } from "./firebase.js";  
+import { auth, db } from "./firebase.js";
 
-import {  
-  onAuthStateChanged,  
-  sendPasswordResetEmail  
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";  
+import {
+  onAuthStateChanged,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-import {  
-  collection,  
-  addDoc,  
-  onSnapshot,  
-  query,  
-  orderBy,  
-  updateDoc,  
-  doc,  
-  getDoc,  
-  setDoc,  
-  deleteDoc,  
-  where,  
-  serverTimestamp  
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";  
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  updateDoc,
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  where,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let user = null;  
+let user = null;
 
-/* ================= AUTH ================= */  
-onAuthStateChanged(auth, async (u) => {  
-  if (!u) location.href = "index.html";  
+/* ================= AUTH ================= */
+onAuthStateChanged(auth, async (u) => {
+  if (!u) location.href = "index.html";
 
-  user = u;  
+  user = u;
 
-  loadPosts();  
-  loadUsername();  
+  loadPosts();
+  loadUsername();
 
-  // ✅ V17 STEP 1 INJECTION (INIT SOCIAL GRAPH SYSTEM)
+  // SOCIAL GRAPH INIT
   loadFriendRequests();
   loadFriends();
-});  
+});
 
-/* ================= MENU ================= */  
-window.toggleMenu = function () {  
-  const menu = document.getElementById("dropdownMenu");  
-  if (!menu) return;  
+/* ================= MENU ================= */
+window.toggleMenu = function () {
+  const menu = document.getElementById("dropdownMenu");
+  if (!menu) return;
 
-  menu.style.display = menu.style.display === "block" ? "none" : "block";  
-};  
+  menu.style.display =
+    menu.style.display === "block" ? "none" : "block";
+};
 
-/* ================= USERNAME ================= */  
-async function loadUsername() {  
-  const snap = await getDoc(doc(db, "users", user.uid));  
-  const el = document.getElementById("usernameDisplay");  
+/* ================= USERNAME ================= */
+async function loadUsername() {
+  if (!user) return;
 
-  if (snap.exists() && snap.data().username) {  
-    el.innerText = snap.data().username;  
-  } else {  
-    el.innerText = "Not set";  
-  }  
-}  
+  const snap = await getDoc(doc(db, "users", user.uid));
+  const el = document.getElementById("usernameDisplay");
 
-/* ================= UPDATE USERNAME ================= */  
-window.updateUsername = async () => {  
-  const input = document.getElementById("usernameInput");  
-  const username = input.value.trim();  
+  if (snap.exists() && snap.data().username) {
+    el.innerText = snap.data().username;
+  } else {
+    el.innerText = "Not set";
+  }
+}
 
-  if (!username) return alert("Enter username");  
+/* ================= UPDATE USERNAME ================= */
+window.updateUsername = async () => {
+  const input = document.getElementById("usernameInput");
+  const username = input.value.trim();
 
-  await setDoc(doc(db, "users", user.uid), { username }, { merge: true });  
+  if (!username) return alert("Enter username");
 
-  document.getElementById("usernameDisplay").innerText = username;  
-  input.value = "";  
-};  
+  await setDoc(
+    doc(db, "users", user.uid),
+    { username },
+    { merge: true }
+  );
 
-/* ================= RESET PASSWORD ================= */  
-window.resetPassword = async () => {  
-  await sendPasswordResetEmail(auth, user.email);  
-  alert("Reset email sent");  
-};  
+  document.getElementById("usernameDisplay").innerText = username;
+  input.value = "";
+};
 
-/* ================= CREATE POST ================= */  
-window.createPost = async () => {  
-  const input = document.getElementById("postInput");  
-  const text = input.value.trim();  
+/* ================= RESET PASSWORD ================= */
+window.resetPassword = async () => {
+  await sendPasswordResetEmail(auth, user.email);
+  alert("Reset email sent");
+};
 
-  if (!text) return;  
+/* ================= CREATE POST (SOCIAL HOOK READY) ================= */
+window.createPost = async () => {
+  const input = document.getElementById("postInput");
+  const text = input.value.trim();
 
-  await addDoc(collection(db, "posts"), {  
-    text,  
-    user: user.email.split("@")[0],  
-    visibility: "public",  
-    time: Date.now()  
-  });  
+  if (!text) return;
 
-  input.value = "";  
-};  
+  const postRef = await addDoc(collection(db, "posts"), {
+    text,
+    user: user.email.split("@")[0],
+    uid: user.uid,
+    visibility: "public",
+    time: Date.now(),
+    likes: []
+  });
 
-/* ================= LOAD POSTS ================= */  
-function loadPosts() {  
-  const q = query(collection(db, "posts"), orderBy("time"));  
+  input.value = "";
 
-  onSnapshot(q, (snap) => {  
-    const box = document.getElementById("myPosts");  
-    box.innerHTML = "";  
+  // 🔥 V17.3 HOOK (NOTIFICATION READY)
+  // future: notify friends/feed system
+  console.log("POST CREATED:", postRef.id);
+};
 
-    snap.forEach(docSnap => {  
-      const p = docSnap.data();  
-      const id = docSnap.id;  
+/* ================= LOAD POSTS ================= */
+function loadPosts() {
+  const q = query(collection(db, "posts"), orderBy("time"));
 
-      if (p.user !== user.email.split("@")[0]) return;  
+  onSnapshot(q, (snap) => {
+    const box = document.getElementById("myPosts");
+    if (!box) return;
 
-      const isPrivate = p.visibility === "private";  
+    box.innerHTML = "";
 
-      box.innerHTML += `  
-        <div class="post">  
+    snap.forEach(docSnap => {
+      const p = docSnap.data();
+      const id = docSnap.id;
 
-          <div style="display:flex;justify-content:space-between;align-items:center;">  
-            <div style="display:flex;align-items:center;">  
-              <div class="avatar"></div>  
-              <div style="margin-left:8px;">${p.user}</div>  
-            </div>  
+      if (p.user !== user.email.split("@")[0]) return;
 
-            <div style="position:relative;">  
-              <div style="cursor:pointer;font-size:18px;" onclick="togglePostMenu('${id}')">⋯</div>  
+      const isPrivate = p.visibility === "private";
 
-              <div class="menu-box" id="menu-${id}">  
-                <button onclick="editPost('${id}','${p.text}')">✏️ Edit</button>  
-                <button onclick="deletePost('${id}')">🗑 Delete</button>  
-                <button onclick="togglePrivacy('${id}','${p.visibility}')">  
-                  ${isPrivate ? "🌍 Make Public" : "🔒 Make Private"}  
-                </button>  
-              </div>  
-            </div>  
-          </div>  
+      box.innerHTML += `
+        <div class="post">
 
-          <div style="margin-top:8px;">${p.text}</div>  
+          <div style="display:flex;justify-content:space-between;align-items:center;">
 
-        </div>  
-      `;  
-    });  
-  });  
-}  
+            <div style="display:flex;align-items:center;">
+              <div class="avatar"></div>
+              <div style="margin-left:8px;">${p.user}</div>
+            </div>
 
-/* ================= POST MENU TOGGLE ================= */  
-window.togglePostMenu = function (id) {  
-  const menu = document.getElementById("menu-" + id);  
+            <!-- 3 DOT MENU (V17 FIXED) -->
+            <div style="position:relative;">
+              <div style="cursor:pointer;font-size:18px;"
+                   onclick="togglePostMenu('${id}')">⋯</div>
 
-  document.querySelectorAll(".menu-box").forEach(m => m.style.display = "none");  
+              <div class="menu-box" id="menu-${id}" style="display:none;">
+                <button onclick="editPost('${id}','${p.text}')">✏️ Edit</button>
+                <button onclick="deletePost('${id}')">🗑 Delete</button>
+                <button onclick="togglePrivacy('${id}','${p.visibility}')">
+                  ${isPrivate ? "🌍 Make Public" : "🔒 Make Private"}
+                </button>
+              </div>
+            </div>
 
-  if (!menu) return;  
+          </div>
 
-  menu.style.display = menu.style.display === "block" ? "none" : "block";  
-};  
+          <div style="margin-top:8px;">${p.text}</div>
 
-/* ================= EDIT POST ================= */  
-window.editPost = async function (id, oldText) {  
-  const newText = prompt("Edit post:", oldText);  
-  if (!newText) return;  
+        </div>
+      `;
+    });
+  });
+}
 
-  await updateDoc(doc(db, "posts", id), { text: newText });  
-};  
+/* ================= MENU TOGGLE ================= */
+window.togglePostMenu = function (id) {
+  const menu = document.getElementById("menu-" + id);
 
-/* ================= DELETE POST ================= */  
-window.deletePost = async function (id) {  
-  if (!confirm("Delete post?")) return;  
+  document.querySelectorAll(".menu-box")
+    .forEach(m => (m.style.display = "none"));
 
-  await deleteDoc(doc(db, "posts", id));  
-};  
+  if (!menu) return;
 
-/* ================= PRIVACY TOGGLE ================= */  
-window.togglePrivacy = async function (id, current) {  
-  const newState = current === "private" ? "public" : "private";  
+  menu.style.display =
+    menu.style.display === "block" ? "none" : "block";
+};
 
-  await updateDoc(doc(db, "posts", id), {  
-    visibility: newState  
-  });  
-};  
+/* ================= EDIT POST ================= */
+window.editPost = async function (id, oldText) {
+  const newText = prompt("Edit post:", oldText);
+  if (!newText) return;
 
+  await updateDoc(doc(db, "posts", id), {
+    text: newText
+  });
+};
 
-/* =========================================================  
-   🔥 V17 SOCIAL GRAPH SYSTEM  
-========================================================= */  
+/* ================= DELETE POST ================= */
+window.deletePost = async function (id) {
+  await deleteDoc(doc(db, "posts", id));
+};
 
-/* ================= SEND FRIEND REQUEST ================= */  
-window.sendFriendRequest = async function (toUid, toName) {  
-  if (!user || user.uid === toUid) return;  
+/* ================= PRIVACY TOGGLE ================= */
+window.togglePrivacy = async function (id, current) {
+  const newState = current === "private" ? "public" : "private";
 
-  await addDoc(collection(db, "friendRequests"), {  
-    from: user.uid,  
-    fromName: user.email.split("@")[0],  
-    to: toUid,  
-    toName,  
-    status: "pending",  
-    createdAt: serverTimestamp()  
-  });  
-};  
+  await updateDoc(doc(db, "posts", id), {
+    visibility: newState
+  });
+};
 
-/* ================= LOAD FRIEND REQUESTS ================= */  
-function loadFriendRequests() {  
-  const box = document.getElementById("friendRequestsBox");  
-  if (!box) return;  
+/* =====================================================
+   🔥 V17 SOCIAL GRAPH CORE
+===================================================== */
 
-  const q = query(  
-    collection(db, "friendRequests"),  
-    where("to", "==", user.uid),  
-    where("status", "==", "pending")  
-  );  
+/* ================= SEND FRIEND REQUEST ================= */
+window.sendFriendRequest = async function (toUid, toName) {
+  if (!user || user.uid === toUid) return;
 
-  onSnapshot(q, (snap) => {  
-    let html = "";  
+  await addDoc(collection(db, "friendRequests"), {
+    from: user.uid,
+    fromName: user.email.split("@")[0],
+    to: toUid,
+    toName,
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
+};
 
-    snap.forEach(d => {  
-      const r = d.data();  
+/* ================= LOAD FRIEND REQUESTS ================= */
+function loadFriendRequests() {
+  const box = document.getElementById("friendRequestsBox");
+  if (!box) return;
 
-      html += `  
-        <div class="card">  
-          <b>${r.fromName}</b> sent a friend request  
+  const q = query(
+    collection(db, "friendRequests"),
+    where("to", "==", user.uid),
+    where("status", "==", "pending")
+  );
 
-          <div style="margin-top:6px;display:flex;gap:6px;">  
-            <button onclick="acceptFriend('${d.id}','${r.from}')">Accept</button>  
-            <button onclick="rejectFriend('${d.id}')">Reject</button>  
-          </div>  
-        </div>  
-      `;  
-    });  
+  onSnapshot(q, (snap) => {
+    let html = "";
 
-    box.innerHTML = html;  
-  });  
-}  
+    snap.forEach(d => {
+      const r = d.data();
 
-/* ================= ACCEPT FRIEND ================= */  
-window.acceptFriend = async function (id, fromUid) {  
-  await updateDoc(doc(db, "friendRequests", id), {  
-    status: "accepted"  
-  });  
+      html += `
+        <div class="card">
+          <b>${r.fromName}</b> sent a friend request
 
-  await addDoc(collection(db, "friends"), {  
-    userA: user.uid,  
-    userB: fromUid,  
-    createdAt: serverTimestamp()  
-  });  
-};  
+          <div style="margin-top:6px;display:flex;gap:6px;">
+            <button onclick="acceptFriend('${d.id}','${r.from}')">Accept</button>
+            <button onclick="rejectFriend('${d.id}')">Reject</button>
+          </div>
+        </div>
+      `;
+    });
 
-/* ================= REJECT FRIEND ================= */  
-window.rejectFriend = async function (id) {  
-  await updateDoc(doc(db, "friendRequests", id), {  
-    status: "rejected"  
-  });  
-};  
+    box.innerHTML = html;
+  });
+}
 
-/* ================= LOAD FRIENDS ================= */  
-function loadFriends() {  
-  const box = document.getElementById("friendsBox");  
-  if (!box) return;  
+/* ================= ACCEPT FRIEND ================= */
+window.acceptFriend = async function (id, fromUid) {
+  await updateDoc(doc(db, "friendRequests", id), {
+    status: "accepted"
+  });
 
-  const q = query(collection(db, "friends"));  
+  await addDoc(collection(db, "friends"), {
+    userA: user.uid,
+    userB: fromUid,
+    createdAt: serverTimestamp()
+  });
 
-  onSnapshot(q, (snap) => {  
-    let html = "";  
+  // 🔥 V17.3 HOOK
+  console.log("FRIEND ADDED");
+};
 
-    snap.forEach(d => {  
-      const f = d.data();  
+/* ================= REJECT FRIEND ================= */
+window.rejectFriend = async function (id) {
+  await updateDoc(doc(db, "friendRequests", id), {
+    status: "rejected"
+  });
+};
 
-      if (f.userA !== user.uid && f.userB !== user.uid) return;  
+/* ================= LOAD FRIENDS ================= */
+function loadFriends() {
+  const box = document.getElementById("friendsBox");
+  if (!box) return;
 
-      const friendId = f.userA === user.uid ? f.userB : f.userA;  
+  const q = query(collection(db, "friends"));
 
-      html += `  
-        <div class="card">  
-          👤 ${friendId}  
-          <button onclick="openProfile('${friendId}')">View</button>  
-        </div>  
-      `;  
-    });  
+  onSnapshot(q, (snap) => {
+    let html = "";
 
-    box.innerHTML = html;  
-  });  
-}  
+    snap.forEach(d => {
+      const f = d.data();
 
-/* ================= PROFILE NAV ================= */  
-window.openProfile = function (uid) {  
-  location.href = `user.html?uid=${uid}`;  
+      if (f.userA !== user.uid && f.userB !== user.uid) return;
+
+      const friendId =
+        f.userA === user.uid ? f.userB : f.userA;
+
+      html += `
+        <div class="card">
+          👤 ${friendId}
+          <button onclick="openProfile('${friendId}')">View</button>
+        </div>
+      `;
+    });
+
+    box.innerHTML = html;
+  });
+}
+
+/* ================= PROFILE NAV ================= */
+window.openProfile = function (uid) {
+  location.href = `user.html?uid=${uid}`;
 };
