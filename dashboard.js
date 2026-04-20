@@ -81,12 +81,12 @@ function loadUsers() {
   });
 }
 
-/* ================= FEED ================= */
+/* ================= FEED (CHAT SYSTEM) ================= */
 function loadFeed() {
   const box = document.getElementById("chatBox");
   if (!box) return;
 
-  const q = query(collection(db, "posts"), orderBy("time", "desc"));
+  const q = query(collection(db, "posts"), orderBy("time", "asc"));
 
   onSnapshot(q, (snap) => {
     box.innerHTML = "";
@@ -95,15 +95,28 @@ function loadFeed() {
       const m = docSnap.data();
       if (!m?.text) return;
 
+      const time = m.time?.toDate
+        ? m.time.toDate().toLocaleTimeString()
+        : "";
+
       box.innerHTML += `
-        <div class="msg" style="margin:6px 0;padding:6px;background:#0b132b;border-radius:6px;">
-          <b>${m.user}</b><br/>
-          ${m.text}
+        <div class="msg" style="
+          margin:6px 0;
+          padding:8px;
+          background:#1c2541;
+          border-radius:6px;
+          font-size:13px;
+        ">
+          <b>${m.user}</b>: ${m.text}
+          <div style="font-size:10px;opacity:0.6;">${time}</div>
         </div>
       `;
     });
 
-    /* 🔥 LOAD ADS ONCE AFTER FEED RENDERS */
+    /* AUTO SCROLL */
+    box.scrollTop = box.scrollHeight;
+
+    /* LOAD ADS ONCE */
     loadAdsIntoDashboard();
   });
 }
@@ -113,7 +126,7 @@ async function loadAdsIntoDashboard() {
   const box = document.getElementById("chatBox");
   if (!box) return;
 
-  if (adsLoaded) return; // prevent duplication
+  if (adsLoaded) return;
   adsLoaded = true;
 
   try {
@@ -141,11 +154,11 @@ async function loadAdsIntoDashboard() {
     });
 
   } catch (err) {
-    console.log("Ads failed to load", err);
+    console.log("Ads failed", err);
   }
 }
 
-/* ================= AD CLICK TRACK ================= */
+/* ================= AD CLICK ================= */
 window.openAd = function (id, link) {
   fetch(`${API}/ads/click/${id}`, { method: "POST" });
   window.location.href = link;
@@ -182,30 +195,15 @@ window.logout = async function () {
 window.goHome = () => location.href = "dashboard.html";
 window.goProfile = () => location.href = "profile.html";
 
-/* ================= ADMIN ONLY ================= */
+/* ================= ADMIN ================= */
 window.goAdmin = () => {
-  if (!user) {
-    alert("Loading session...");
-    return;
-  }
-
-  if (!userData) {
-    alert("Loading user data...");
-    return;
-  }
-
-  if (!isAdmin) {
-    alert("❌ Admin only access");
-    return;
-  }
-
+  if (!userData) return alert("Loading...");
+  if (!isAdmin) return alert("❌ Admin only");
   location.href = "admin.html";
 };
 
-/* ================= ADS SPACE ================= */
-window.goAdSpace = () => {
-  location.href = "ads.html";
-};
+/* ================= ADS ================= */
+window.goAdSpace = () => location.href = "ads.html";
 
 window.support = () => alert("Support coming soon");
 window.goFaq = () => location.href = "faq.html";
