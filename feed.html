@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MCN Feed V17.2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #0b132b;
+      color: white;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background: #1c2541;
+    }
+
+    .card {
+      background: #1c2541;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 12px;
+    }
+
+    .post {
+      background: #0b132b;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background: #5bc0be;
+    }
+
+    button {
+      background: #5bc0be;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <h3>🔥 Social Feed</h3>
+  <button onclick="location.href='dashboard.html'">Back</button>
+</div>
+
+<div class="card">
+  <div id="feed"></div>
+</div>
+
+<script type="module" src="feed.js"></script>
+
+</body>
+</html>
