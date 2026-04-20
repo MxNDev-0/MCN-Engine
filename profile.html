@@ -14,7 +14,7 @@
       color: white;
     }
 
-    /* ================= HEADER ================= */
+    /* ================= NAVBAR ================= */
     .navbar {
       display: flex;
       justify-content: space-between;
@@ -29,65 +29,93 @@
       padding: 6px 10px;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 12px;
     }
 
-    /* ================= PROFILE HEADER (FB STYLE) ================= */
+    /* TEXT BACK BUTTON (NO ARROW) */
+    .back-text {
+      margin: 10px;
+      background: none;
+      border: none;
+      color: #5bc0be;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* ================= PROFILE HEADER (FB STYLE SMALL LEFT AVATAR) ================= */
     .profile-header {
+      display: flex;
+      align-items: center;
       background: #1c2541;
-      padding: 20px;
-      margin: 12px;
-      border-radius: 14px;
-      text-align: center;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 12px;
     }
 
     .avatar {
-      width: 80px;
-      height: 80px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background: #5bc0be;
-      margin: auto;
-      cursor: pointer;
-      background-size: cover;
-      background-position: center;
+      flex-shrink: 0;
     }
 
     .username {
-      margin-top: 10px;
-      font-size: 18px;
+      margin-left: 10px;
+      font-size: 15px;
       color: #5bc0be;
       font-weight: bold;
     }
 
-    /* ================= LAYOUT ================= */
-    .container {
-      padding: 10px;
+    /* ================= ICON ACTIONS ================= */
+    .icon-row {
+      display: flex;
+      gap: 10px;
+      margin: 10px;
     }
 
-    .card {
+    .icon-box {
+      background: #1c2541;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* ================= POPUPS ================= */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 10%;
+      right: 10%;
       background: #1c2541;
       padding: 12px;
       border-radius: 12px;
-      margin: 10px;
+      z-index: 999;
     }
 
-    /* ================= FRIENDS (TOP SECTION) ================= */
-    .top-section {
+    /* ================= POST CARD ================= */
+    .card {
+      background: #1c2541;
       margin: 10px;
+      padding: 10px;
+      border-radius: 12px;
     }
 
-    /* ================= POST BOX ================= */
+    /* FIXED TEXTAREA (NO OVERFLOW, SYMMETRIC PADDING) */
     #postInput {
       width: 100%;
-      min-height: 160px;
-      padding: 14px;
-      border-radius: 12px;
+      min-height: 140px;
+      padding: 12px;
+      border-radius: 10px;
       border: none;
       outline: none;
       resize: none;
       font-size: 14px;
       background: #0b132b;
       color: white;
-      box-shadow: inset 0 0 0 1px #1c2541;
+      box-sizing: border-box;
     }
 
     /* ================= POSTS ================= */
@@ -95,11 +123,10 @@
       background: #0b132b;
       padding: 10px;
       border-radius: 10px;
-      margin-bottom: 10px;
+      margin-top: 10px;
       position: relative;
     }
 
-    /* ONLY 3 DOT MENU */
     .dots {
       position: absolute;
       right: 8px;
@@ -116,8 +143,7 @@
       border-radius: 8px;
       display: none;
       flex-direction: column;
-      overflow: hidden;
-      z-index: 5;
+      z-index: 10;
     }
 
     .menu-box button {
@@ -125,23 +151,8 @@
       border: none;
       color: white;
       padding: 8px;
-      text-align: left;
       font-size: 12px;
-      cursor: pointer;
-    }
-
-    .menu-box button:hover {
-      background: #5bc0be;
-      color: black;
-    }
-
-    /* BACK BUTTON ONLY */
-    .back-btn {
-      margin: 10px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      background: #5bc0be;
-      border: none;
+      text-align: left;
     }
   </style>
 </head>
@@ -150,7 +161,7 @@
 
 <!-- NAV -->
 <div class="navbar">
-  <button class="icon-btn" onclick="location.href='dashboard.html'">⬅</button>
+  <button class="icon-btn" onclick="goBackText()">Back</button>
   <h3>Profile</h3>
   <button class="icon-btn" onclick="toggleMenu()">☰</button>
 </div>
@@ -161,41 +172,61 @@
   <div class="username" id="usernameDisplay">Loading...</div>
 </div>
 
-<!-- BACK BUTTON (ONLY ONE) -->
-<button class="back-btn" onclick="location.href='dashboard.html'">Back</button>
+<!-- FRIEND ICONS ONLY -->
+<div class="icon-row">
+  <div class="icon-box" onclick="openRequests()">👥 Requests</div>
+  <div class="icon-box" onclick="openFriends()">👤 Friends</div>
+</div>
 
-<div class="container">
+<!-- POPUPS -->
+<div id="requestsPopup" class="popup">
+  <h4>Friend Requests</h4>
+  <div id="friendRequestsBox"></div>
+  <button onclick="closePopup('requestsPopup')">Close</button>
+</div>
 
-  <!-- FRIEND SYSTEM (TOP LIKE FACEBOOK) -->
-  <div class="card">
-    <h4>👥 Friend Requests</h4>
-    <div id="friendRequestsBox"></div>
+<div id="friendsPopup" class="popup">
+  <h4>Friends</h4>
+  <div id="friendsBox"></div>
+  <button onclick="closePopup('friendsPopup')">Close</button>
+</div>
+
+<!-- CREATE POST -->
+<div class="card">
+  <h4>Create Post</h4>
+
+  <textarea id="postInput" placeholder="What's on your mind?"></textarea>
+
+  <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+    <button onclick="createPost()">Post</button>
   </div>
+</div>
 
-  <div class="card">
-    <h4>👤 Friends</h4>
-    <div id="friendsBox"></div>
-  </div>
-
-  <!-- CREATE POST -->
-  <div class="card">
-    <h4>Create Post</h4>
-
-    <textarea id="postInput" placeholder="What's on your mind?"></textarea>
-
-    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-      <button onclick="createPost()">Post</button>
-    </div>
-  </div>
-
-  <!-- POSTS -->
-  <div class="card">
-    <h4>My Posts</h4>
-    <div id="myPosts"></div>
-  </div>
-
+<!-- POSTS -->
+<div class="card">
+  <h4>My Posts</h4>
+  <div id="myPosts"></div>
 </div>
 
 <script type="module" src="profile.js"></script>
+
+<script>
+  function goBackText(){
+    location.href = "dashboard.html";
+  }
+
+  function openRequests(){
+    document.getElementById("requestsPopup").style.display = "block";
+  }
+
+  function openFriends(){
+    document.getElementById("friendsPopup").style.display = "block";
+  }
+
+  function closePopup(id){
+    document.getElementById(id).style.display = "none";
+  }
+</script>
+
 </body>
 </html>
