@@ -95,7 +95,7 @@ function loadChatV11() {
         minute: "2-digit"
       }) || "";
 
-      const isMe = userName === user.email.split("@")[0];
+      const isMe = m.uid === user.uid;
 
       html += `
         <div style="margin:10px 0;padding:6px;border-radius:8px;background:#1c2541;">
@@ -123,7 +123,7 @@ function loadChatV11() {
               <button onclick="editMsg('${id}', \`${text}\`)">Edit</button>
             ` : ""}
 
-            ${isAdmin ? `
+            ${(isMe || isAdmin) ? `
               <button onclick="deletePost('${id}')">Delete</button>
             ` : ""}
 
@@ -138,7 +138,7 @@ function loadChatV11() {
   });
 }
 
-/* ================= SEND ================= */
+/* ================= SEND (FIXED UID INJECTION) ================= */
 window.sendMessage = async function () {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
@@ -150,13 +150,15 @@ window.sendMessage = async function () {
   await addDoc(collection(db, "posts"), {
     text,
     user: user.email.split("@")[0],
+    uid: user.uid, // ✅ CRITICAL FIX
     time: serverTimestamp(),
     replyText: replyTo ? replyTo.text : null,
     likes: []
   });
 
   replyTo = null;
-  document.getElementById("replyBox")?.style && (document.getElementById("replyBox").style.display = "none");
+  const replyBox = document.getElementById("replyBox");
+  if (replyBox) replyBox.style.display = "none";
 };
 
 /* ================= LIKE ================= */
@@ -168,7 +170,6 @@ window.likeMsg = async function (id) {
 
   const data = snap.data();
   const likes = data.likes || [];
-
   const uid = user.uid;
 
   const updated = likes.includes(uid)
@@ -204,22 +205,20 @@ window.editMsg = async function (id, oldText) {
   });
 };
 
-/* ================= DELETE FIX ================= */
+/* ================= DELETE (FIXED LOGIC) ================= */
 window.deletePost = async function (id) {
-  if (!isAdmin) return alert("❌ Admin only");
-
   try {
     await deleteDoc(doc(db, "posts", id));
-    alert("Deleted");
   } catch (e) {
     console.error(e);
     alert("Delete failed");
   }
 };
 
-/* ================= MENU (FIXED) ================= */
+/* ================= MENU ================= */
 window.toggleMenu = function () {
-  document.getElementById("menu").classList.toggle("active");
+  const menu = document.getElementById("menu");
+  if (menu) menu.classList.toggle("active");
 };
 
 window.logout = async function () {
@@ -227,6 +226,7 @@ window.logout = async function () {
   location.href = "index.html";
 };
 
+/* ================= NAV ================= */
 window.goHome = () => location.href = "dashboard.html";
 window.goProfile = () => location.href = "profile.html";
 window.goAdSpace = () => location.href = "ads.html";
