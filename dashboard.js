@@ -141,44 +141,60 @@ window.goAdmin = () => {
   location.href = "admin.html";
 };
 
-/* ================= WALLET FX + CRYPTO (NEW) ================= */
+/* ================= PRICE ALERT SYSTEM ================= */
 
-async function loadCurrency() {
-  try {
-    const res = await fetch("https://api.exchangerate.host/latest?base=USD");
-    const data = await res.json();
+let activeAlerts = [];
 
-    const usd = Number(document.getElementById("walletBalance")?.innerText || 0);
+window.setPriceAlert = function () {
+  const coin = document.getElementById("alertCoin").value;
+  const price = parseFloat(document.getElementById("alertPrice").value);
 
-    document.getElementById("walletEUR").innerText =
-      (usd * data.rates.EUR).toFixed(2);
+  if (!price || price <= 0) {
+    alert("Enter valid price");
+    return;
+  }
 
-    document.getElementById("walletGBP").innerText =
-      (usd * data.rates.GBP).toFixed(2);
+  activeAlerts.push({ coin, price });
 
-  } catch (e) {}
-}
+  document.getElementById("alertStatus").innerHTML =
+    `🔔 Alert set for ${coin.toUpperCase()} at $${price}`;
+};
 
-async function loadCrypto() {
+async function checkAlerts() {
+  if (activeAlerts.length === 0) return;
+
   try {
     const res = await fetch(
       "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether&vs_currencies=usd"
     );
 
-    const d = await res.json();
+    const data = await res.json();
 
-    document.getElementById("cryptoPrices").innerHTML = `
-      🪙 BTC: $${d.bitcoin.usd}<br>
-      💎 ETH: $${d.ethereum.usd}<br>
-      💵 USDT: $${d.tether.usd}
-    `;
+    activeAlerts.forEach((alert, i) => {
+      const current = data[alert.coin]?.usd;
+
+      if (current && current >= alert.price) {
+        triggerAlert(alert.coin, current);
+        activeAlerts.splice(i, 1);
+      }
+    });
+
   } catch (e) {}
 }
 
-setInterval(() => {
-  loadCurrency();
-  loadCrypto();
-}, 10000);
+function triggerAlert(coin, price) {
+  document.getElementById("alertStatus").innerHTML =
+    `🚨 ${coin.toUpperCase()} reached $${price}`;
 
-loadCurrency();
-loadCrypto();
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("Price Alert", {
+      body: `${coin.toUpperCase()} is now $${price}`
+    });
+  }
+}
+
+if ("Notification" in window) {
+  Notification.requestPermission();
+}
+
+setInterval(checkAlerts, 10000);
