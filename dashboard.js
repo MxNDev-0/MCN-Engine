@@ -36,7 +36,8 @@ onAuthStateChanged(auth, async (u) => {
   isAdmin = userData?.role === "admin";
 
   loadUsers();
-  loadChatV11();
+  loadChatV12();
+  setupTyping();
 });
 
 /* ================= USER ================= */
@@ -72,73 +73,86 @@ function loadUsers() {
   });
 }
 
-/* ================= CHAT V11 ================= */
-function loadChatV11() {
+/* ================= CHAT V12 ================= */
+function loadChatV12() {
   const box = document.getElementById("chatBox");
   if (!box) return;
 
   const q = query(collection(db, "posts"), orderBy("time", "asc"));
 
-  onSnapshot(q, (snap) => {
+  onSnapshot(q, async (snap) => {
     let html = "";
 
     snap.forEach(d => {
       const m = d.data();
       const id = d.id;
 
-      const userName = m.user || "user";
-      const text = m.text || "";
-      const likes = m.likes || [];
-
-      const time = m.time?.toDate?.().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-      }) || "";
-
       const isMe = m.uid === user.uid;
+
+      const seen = m.seenBy?.length > 1;
 
       html += `
         <div style="margin:10px 0;padding:6px;border-radius:8px;background:#1c2541;">
 
           <div style="font-size:11px;opacity:0.6;">
-            ${userName}
+            ${m.user}
           </div>
 
           <div style="font-size:13px;margin:5px 0;">
             ${m.replyText ? `<div style="font-size:11px;opacity:0.6;">↪ ${m.replyText}</div>` : ""}
-            ${text}
+            ${m.text}
           </div>
 
           <div style="font-size:10px;opacity:0.5;">
-            ${time}
+            ${m.time?.toDate?.().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}) || ""}
+            ${isMe ? (seen ? " ✓✓" : " ✓") : ""}
           </div>
 
           <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;">
+            <button onclick="likeMsg('${id}')">👍 ${(m.likes || []).length}</button>
+            <button onclick="setReply('${id}', \`${m.text}\`)">Reply</button>
 
-            <button onclick="likeMsg('${id}')">👍 ${likes.length}</button>
-
-            <button onclick="setReply('${id}', \`${text}\`)">Reply</button>
-
-            ${isMe ? `
-              <button onclick="editMsg('${id}', \`${text}\`)">Edit</button>
-            ` : ""}
-
-            ${(isMe || isAdmin) ? `
-              <button onclick="deletePost('${id}')">Delete</button>
-            ` : ""}
-
+            ${isMe ? `<button onclick="editMsg('${id}', \`${m.text}\`)">Edit</button>` : ""}
+            ${(isMe || isAdmin) ? `<button onclick="deletePost('${id}')">Delete</button>` : ""}
           </div>
 
         </div>
       `;
+
+      /* ✅ MARK AS SEEN */
+      if (!m.seenBy?.includes(user.uid)) {
+        updateDoc(doc(db, "posts", id), {
+          seenBy: [...(m.seenBy || []), user.uid]
+        });
+      }
     });
 
     box.innerHTML = html;
     box.scrollTop = box.scrollHeight;
   });
+
+  /* ================= TYPING INDICATOR ================= */
+  const typingBox = document.getElementById("typingBox");
+
+  onSnapshot(collection(db, "typing"), (snap) => {
+    let typingUsers = [];
+
+    snap.forEach(d => {
+      const t = d.data();
+      if (t.uid !== user.uid && t.typing) {
+        typingUsers.push(t.username);
+      }
+    });
+
+    if (typingBox) {
+      typingBox.innerText = typingUsers.length
+        ? typingUsers.join(", ") + " typing..."
+        : "";
+    }
+  });
 }
 
-/* ================= SEND (FIXED UID INJECTION) ================= */
+/* ================= SEND ================= */
 window.sendMessage = async function () {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
@@ -150,31 +164,57 @@ window.sendMessage = async function () {
   await addDoc(collection(db, "posts"), {
     text,
     user: user.email.split("@")[0],
-    uid: user.uid, // ✅ CRITICAL FIX
+    uid: user.uid,
     time: serverTimestamp(),
     replyText: replyTo ? replyTo.text : null,
-    likes: []
+    likes: [],
+    seenBy: [user.uid]
   });
 
   replyTo = null;
-  const replyBox = document.getElementById("replyBox");
-  if (replyBox) replyBox.style.display = "none";
+  stopTyping();
 };
+
+/* ================= TYPING SYSTEM ================= */
+function setupTyping() {
+  const input = document.getElementById("chatInput");
+  if (!input) return;
+
+  input.addEventListener("input", () => {
+    setDoc(doc(db, "typing", user.uid), {
+      uid: user.uid,
+      username: user.email.split("@")[0],
+      typing: true
+    });
+
+    clearTimeout(window.typingTimeout);
+
+    window.typingTimeout = setTimeout(() => {
+      stopTyping();
+    }, 2000);
+  });
+}
+
+function stopTyping() {
+  setDoc(doc(db, "typing", user.uid), {
+    uid: user.uid,
+    username: user.email.split("@")[0],
+    typing: false
+  });
+}
 
 /* ================= LIKE ================= */
 window.likeMsg = async function (id) {
   const ref = doc(db, "posts", id);
   const snap = await getDoc(ref);
-
   if (!snap.exists()) return;
 
   const data = snap.data();
   const likes = data.likes || [];
-  const uid = user.uid;
 
-  const updated = likes.includes(uid)
-    ? likes.filter(l => l !== uid)
-    : [...likes, uid];
+  const updated = likes.includes(user.uid)
+    ? likes.filter(l => l !== user.uid)
+    : [...likes, user.uid];
 
   await updateDoc(ref, { likes: updated });
 };
@@ -205,12 +245,11 @@ window.editMsg = async function (id, oldText) {
   });
 };
 
-/* ================= DELETE (FIXED LOGIC) ================= */
+/* ================= DELETE ================= */
 window.deletePost = async function (id) {
   try {
     await deleteDoc(doc(db, "posts", id));
   } catch (e) {
-    console.error(e);
     alert("Delete failed");
   }
 };
