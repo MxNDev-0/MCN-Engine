@@ -30,8 +30,6 @@ onAuthStateChanged(auth, async (u) => {
 
   loadPosts();
   loadUsername();
-
-  // SOCIAL GRAPH INIT
   loadFriendRequests();
   loadFriends();
 });
@@ -47,8 +45,6 @@ window.toggleMenu = function () {
 
 /* ================= USERNAME ================= */
 async function loadUsername() {
-  if (!user) return;
-
   const snap = await getDoc(doc(db, "users", user.uid));
   const el = document.getElementById("usernameDisplay");
 
@@ -66,11 +62,7 @@ window.updateUsername = async () => {
 
   if (!username) return alert("Enter username");
 
-  await setDoc(
-    doc(db, "users", user.uid),
-    { username },
-    { merge: true }
-  );
+  await setDoc(doc(db, "users", user.uid), { username }, { merge: true });
 
   document.getElementById("usernameDisplay").innerText = username;
   input.value = "";
@@ -82,14 +74,14 @@ window.resetPassword = async () => {
   alert("Reset email sent");
 };
 
-/* ================= CREATE POST (SOCIAL HOOK READY) ================= */
+/* ================= CREATE POST ================= */
 window.createPost = async () => {
   const input = document.getElementById("postInput");
   const text = input.value.trim();
 
   if (!text) return;
 
-  const postRef = await addDoc(collection(db, "posts"), {
+  await addDoc(collection(db, "posts"), {
     text,
     user: user.email.split("@")[0],
     uid: user.uid,
@@ -99,10 +91,6 @@ window.createPost = async () => {
   });
 
   input.value = "";
-
-  // 🔥 V17.3 HOOK (NOTIFICATION READY)
-  // future: notify friends/feed system
-  console.log("POST CREATED:", postRef.id);
 };
 
 /* ================= LOAD POSTS ================= */
@@ -111,8 +99,6 @@ function loadPosts() {
 
   onSnapshot(q, (snap) => {
     const box = document.getElementById("myPosts");
-    if (!box) return;
-
     box.innerHTML = "";
 
     snap.forEach(docSnap => {
@@ -127,18 +113,15 @@ function loadPosts() {
         <div class="post">
 
           <div style="display:flex;justify-content:space-between;align-items:center;">
-
             <div style="display:flex;align-items:center;">
               <div class="avatar"></div>
               <div style="margin-left:8px;">${p.user}</div>
             </div>
 
-            <!-- 3 DOT MENU (V17 FIXED) -->
             <div style="position:relative;">
-              <div style="cursor:pointer;font-size:18px;"
-                   onclick="togglePostMenu('${id}')">⋯</div>
+              <div style="cursor:pointer;font-size:18px;" onclick="togglePostMenu('${id}')">⋯</div>
 
-              <div class="menu-box" id="menu-${id}" style="display:none;">
+              <div class="menu-box" id="menu-${id}">
                 <button onclick="editPost('${id}','${p.text}')">✏️ Edit</button>
                 <button onclick="deletePost('${id}')">🗑 Delete</button>
                 <button onclick="togglePrivacy('${id}','${p.visibility}')">
@@ -146,7 +129,6 @@ function loadPosts() {
                 </button>
               </div>
             </div>
-
           </div>
 
           <div style="margin-top:8px;">${p.text}</div>
@@ -157,7 +139,7 @@ function loadPosts() {
   });
 }
 
-/* ================= MENU TOGGLE ================= */
+/* ================= MENU ================= */
 window.togglePostMenu = function (id) {
   const menu = document.getElementById("menu-" + id);
 
@@ -170,7 +152,7 @@ window.togglePostMenu = function (id) {
     menu.style.display === "block" ? "none" : "block";
 };
 
-/* ================= EDIT POST ================= */
+/* ================= EDIT ================= */
 window.editPost = async function (id, oldText) {
   const newText = prompt("Edit post:", oldText);
   if (!newText) return;
@@ -180,12 +162,12 @@ window.editPost = async function (id, oldText) {
   });
 };
 
-/* ================= DELETE POST ================= */
+/* ================= DELETE ================= */
 window.deletePost = async function (id) {
   await deleteDoc(doc(db, "posts", id));
 };
 
-/* ================= PRIVACY TOGGLE ================= */
+/* ================= PRIVACY ================= */
 window.togglePrivacy = async function (id, current) {
   const newState = current === "private" ? "public" : "private";
 
@@ -194,11 +176,7 @@ window.togglePrivacy = async function (id, current) {
   });
 };
 
-/* =====================================================
-   🔥 V17 SOCIAL GRAPH CORE
-===================================================== */
-
-/* ================= SEND FRIEND REQUEST ================= */
+/* ================= FRIEND REQUEST ================= */
 window.sendFriendRequest = async function (toUid, toName) {
   if (!user || user.uid === toUid) return;
 
@@ -210,9 +188,16 @@ window.sendFriendRequest = async function (toUid, toName) {
     status: "pending",
     createdAt: serverTimestamp()
   });
+
+  /* 🔔 notification */
+  await addDoc(collection(db, "notifications", toUid, "items"), {
+    text: `${user.email.split("@")[0]} sent you a friend request`,
+    seen: false,
+    createdAt: serverTimestamp()
+  });
 };
 
-/* ================= LOAD FRIEND REQUESTS ================= */
+/* ================= LOAD REQUESTS ================= */
 function loadFriendRequests() {
   const box = document.getElementById("friendRequestsBox");
   if (!box) return;
@@ -233,7 +218,7 @@ function loadFriendRequests() {
         <div class="card">
           <b>${r.fromName}</b> sent a friend request
 
-          <div style="margin-top:6px;display:flex;gap:6px;">
+          <div style="margin-top:6px;">
             <button onclick="acceptFriend('${d.id}','${r.from}')">Accept</button>
             <button onclick="rejectFriend('${d.id}')">Reject</button>
           </div>
@@ -245,7 +230,7 @@ function loadFriendRequests() {
   });
 }
 
-/* ================= ACCEPT FRIEND ================= */
+/* ================= ACCEPT ================= */
 window.acceptFriend = async function (id, fromUid) {
   await updateDoc(doc(db, "friendRequests", id), {
     status: "accepted"
@@ -257,18 +242,22 @@ window.acceptFriend = async function (id, fromUid) {
     createdAt: serverTimestamp()
   });
 
-  // 🔥 V17.3 HOOK
-  console.log("FRIEND ADDED");
+  /* 🔔 notification */
+  await addDoc(collection(db, "notifications", fromUid, "items"), {
+    text: `${user.email.split("@")[0]} accepted your friend request`,
+    seen: false,
+    createdAt: serverTimestamp()
+  });
 };
 
-/* ================= REJECT FRIEND ================= */
+/* ================= REJECT ================= */
 window.rejectFriend = async function (id) {
   await updateDoc(doc(db, "friendRequests", id), {
     status: "rejected"
   });
 };
 
-/* ================= LOAD FRIENDS ================= */
+/* ================= FRIEND LIST ================= */
 function loadFriends() {
   const box = document.getElementById("friendsBox");
   if (!box) return;
@@ -298,7 +287,7 @@ function loadFriends() {
   });
 }
 
-/* ================= PROFILE NAV ================= */
+/* ================= NAV ================= */
 window.openProfile = function (uid) {
   location.href = `user.html?uid=${uid}`;
 };
