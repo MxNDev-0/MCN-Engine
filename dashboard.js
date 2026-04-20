@@ -14,20 +14,22 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   serverTimestamp,
-  deleteDoc
+  deleteDoc,
+  arrayUnion,
+  arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let user = null;
 let userData = null;
 let isAdmin = false;
 
+let replyTo = null;
+
 /* ================= AUTH ================= */
 onAuthStateChanged(auth, async (u) => {
-  if (!u) {
-    location.href = "index.html";
-    return;
-  }
+  if (!u) return location.href = "index.html";
 
   user = u;
 
@@ -36,8 +38,7 @@ onAuthStateChanged(auth, async (u) => {
 
   isAdmin = userData?.role === "admin";
 
-  loadUsers();
-  loadChatV10();
+  loadChatV11();
 });
 
 /* ================= USER ================= */
@@ -59,23 +60,8 @@ async function loadUser() {
   if (snap.exists()) userData = snap.data();
 }
 
-/* ================= USERS ================= */
-function loadUsers() {
-  const box = document.getElementById("onlineUsers");
-  if (!box) return;
-
-  onSnapshot(collection(db, "onlineUsers"), (snap) => {
-    box.innerHTML = "";
-
-    snap.forEach(d => {
-      const u = d.data();
-      box.innerHTML += `<div>🟢 ${u.username || "user"}</div>`;
-    });
-  });
-}
-
-/* ================= CHAT V10 ================= */
-function loadChatV10() {
+/* ================= CHAT V11 ================= */
+function loadChatV11() {
   const box = document.getElementById("chatBox");
   if (!box) return;
 
@@ -83,14 +69,14 @@ function loadChatV10() {
 
   onSnapshot(q, (snap) => {
     let html = "";
-    let lastUser = null;
 
     snap.forEach(d => {
       const m = d.data();
       const id = d.id;
 
-      const userName = m.user || "unknown";
+      const userName = m.user || "user";
       const text = m.text || "";
+      const likes = m.likes || [];
 
       const time = m.time?.toDate?.().toLocaleTimeString([], {
         hour: "2-digit",
@@ -98,37 +84,46 @@ function loadChatV10() {
       }) || "";
 
       const isMe = userName === user.email.split("@")[0];
-      const grouped = lastUser === userName;
-      lastUser = userName;
 
       html += `
-        <div class="msgBox"
-          style="display:flex;flex-direction:column;align-items:${isMe ? "flex-end" : "flex-start"}">
+        <div style="margin:10px 0;padding:6px;border-radius:8px;background:#1c2541;">
 
-          ${!grouped ? `<div style="font-size:11px;opacity:0.6;">${userName}</div>` : ""}
-
-          <div style="
-            max-width:75%;
-            padding:8px 10px;
-            border-radius:14px;
-            background:${isMe ? "#5bc0be" : "#1c2541"};
-            color:${isMe ? "#000" : "#fff"};
-            font-size:13px;
-          ">
-            ${text}
-
-            ${isAdmin ? `
-              <div>
-                <button onclick="deletePost('${id}')"
-                  style="margin-top:5px;font-size:10px;background:red;color:white;border:none;padding:3px 6px;border-radius:4px;">
-                  delete
-                </button>
-              </div>
-            ` : ""}
+          <div style="font-size:11px;opacity:0.6;">
+            ${userName}
           </div>
 
-          <div style="font-size:9px;opacity:0.4;margin-top:2px;">
+          <div style="font-size:13px;margin:5px 0;">
+            ${m.replyText ? `<div style="font-size:11px;opacity:0.6;">↪ ${m.replyText}</div>` : ""}
+            ${text}
+          </div>
+
+          <div style="font-size:10px;opacity:0.5;">
             ${time}
+          </div>
+
+          <!-- ACTIONS -->
+          <div style="margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;">
+
+            <button onclick="likeMsg('${id}')">
+              👍 ${likes.length}
+            </button>
+
+            <button onclick="setReply('${id}', \`${text}\`)">
+              💬 Reply
+            </button>
+
+            ${isMe ? `
+              <button onclick="editMsg('${id}', \`${text}\`)">
+                ✏️ Edit
+              </button>
+            ` : ""}
+
+            ${isAdmin ? `
+              <button onclick="deletePost('${id}')">
+                🗑 Delete
+              </button>
+            ` : ""}
+
           </div>
 
         </div>
@@ -152,50 +147,71 @@ window.sendMessage = async function () {
   await addDoc(collection(db, "posts"), {
     text,
     user: user.email.split("@")[0],
-    time: serverTimestamp()
+    time: serverTimestamp(),
+    replyTo: replyTo || null,
+    replyText: replyTo ? replyTo.text : null,
+    likes: []
+  });
+
+  replyTo = null;
+  document.getElementById("replyBox").style.display = "none";
+};
+
+/* ================= LIKE SYSTEM ================= */
+window.likeMsg = async function (id) {
+  const ref = doc(db, "posts", id);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const likes = data.likes || [];
+
+  const uid = user.uid;
+
+  const updated = likes.includes(uid)
+    ? likes.filter(l => l !== uid)
+    : [...likes, uid];
+
+  await updateDoc(ref, { likes: updated });
+};
+
+/* ================= REPLY ================= */
+window.setReply = function (id, text) {
+  replyTo = { id, text };
+
+  document.getElementById("replyBox").style.display = "block";
+  document.getElementById("replyText").innerText = text;
+};
+
+window.cancelReply = function () {
+  replyTo = null;
+  document.getElementById("replyBox").style.display = "none";
+};
+
+/* ================= EDIT MESSAGE ================= */
+window.editMsg = async function (id, oldText) {
+  const newText = prompt("Edit message:", oldText);
+  if (!newText) return;
+
+  await updateDoc(doc(db, "posts", id), {
+    text: newText
   });
 };
 
-/* ================= ADMIN DELETE FIX ================= */
+/* ================= DELETE ================= */
 window.deletePost = async function (id) {
-  if (!isAdmin) {
-    alert("❌ Admin only");
-    return;
-  }
+  if (!isAdmin) return alert("Admin only");
 
   try {
     await deleteDoc(doc(db, "posts", id));
-    alert("Deleted");
-  } catch (err) {
-    console.error(err);
-    alert("Failed to delete");
+  } catch (e) {
+    alert("Delete failed");
   }
 };
 
-/* ================= MENU ================= */
-window.toggleMenu = function () {
-  document.getElementById("menu").classList.toggle("active");
-};
-
+/* ================= LOGOUT ================= */
 window.logout = async function () {
   await signOut(auth);
   location.href = "index.html";
-};
-
-window.goHome = () => location.href = "dashboard.html";
-window.goProfile = () => location.href = "profile.html";
-window.goAdSpace = () => location.href = "ads.html";
-window.support = () => alert("Support coming soon");
-window.goFaq = () => location.href = "faq.html";
-window.goAbout = () => location.href = "about.html";
-window.goBlog = () => location.href = "blog/index.html";
-
-window.goAdmin = () => {
-  if (!userData) return alert("Loading...");
-  if (!isAdmin) return alert("❌ Admin only");
-  location.href = "admin.html";
-};
-
-window.openDeveloper = () => {
-  alert("Developer tools coming soon");
 };
