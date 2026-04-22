@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MCN Engine Blog Post</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="MCN Engine blog post">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b132b;
+      color: #fff;
+    }
+
+    .header {
+      background: #1c2541;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      color: #5bc0be;
+    }
+
+    .container {
+      padding: 15px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #5bc0be;
+      margin-bottom: 10px;
+    }
+
+    .image {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .content {
+      font-size: 14px;
+      line-height: 1.6;
+      opacity: 0.9;
+    }
+
+    .back {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      background: #5bc0be;
+      color: #000;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h1>MCN ENGINE</h1>
+</div>
+
+<div class="container" id="postContainer">
+  <div class="loading">Loading post...</div>
+</div>
+
+<button class="back" onclick="location.href='index.html'">← Back</button>
+
+<script>
+
+/* ================= GET POST ID ================= */
+function getPostId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("id");
+}
+
+/* ================= LOAD POST ================= */
+async function loadPost() {
+  const id = getPostId();
+
+  if (!id) {
+    document.getElementById("postContainer").innerHTML =
+      "<p>Invalid post.</p>";
+    return;
+  }
+
+  try {
+    const res = await fetch("https://mxm-backend.onrender.com/blog/list");
+    const data = await res.json();
+
+    const post = data.find(p => p.id === id);
+
+    if (!post) {
+      document.getElementById("postContainer").innerHTML =
+        "<p>Post not found.</p>";
+      return;
+    }
+
+    document.title = post.title;
+
+    document.getElementById("postContainer").innerHTML = `
+      <div class="title">${post.title}</div>
+
+      ${post.image ? `<img class="image" src="${post.image}">` : ""}
+
+      <div class="content">${post.content}</div>
+    `;
+
+    // 🔥 VIEW TRACKING
+    fetch(`https://mxm-backend.onrender.com/blog/view/${post.id}`, {
+      method: "POST"
+    });
+
+  } catch (err) {
+    document.getElementById("postContainer").innerHTML =
+      "<p>Error loading post.</p>";
+  }
+}
+
+/* ================= INIT ================= */
+loadPost();
+
+</script>
+
+</body>
+</html>
