@@ -8,8 +8,8 @@ import {
   orderBy,
   serverTimestamp,
   doc,
-  updateDoc,
   setDoc,
+  updateDoc,
   arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -27,7 +27,7 @@ onAuthStateChanged(auth, async (u) => {
   me = u;
 
   await setPresence();
-  loadChats();
+  loadChatList();
 });
 
 /* ================= CHAT ID ================= */
@@ -35,7 +35,7 @@ function chatId(a, b) {
   return [a, b].sort().join("_");
 }
 
-/* ================= PRESENCE ================= */
+/* ================= PRESENCE (REAL PRODUCTION STYLE) ================= */
 async function setPresence() {
   const ref = doc(db, "users", me.uid);
 
@@ -50,8 +50,8 @@ async function setPresence() {
   });
 }
 
-/* ================= LOAD CHAT LIST ================= */
-function loadChats() {
+/* ================= CHAT LIST ================= */
+function loadChatList() {
   const q = query(collection(db, "chats"));
 
   onSnapshot(q, (snap) => {
@@ -59,16 +59,16 @@ function loadChats() {
     box.innerHTML = "";
 
     snap.forEach(d => {
-      const c = d.data();
+      const chat = d.data();
 
-      if (!c.members.includes(me.uid)) return;
+      if (!chat.members.includes(me.uid)) return;
 
-      const other = c.members.find(u => u !== me.uid);
+      const other = chat.members.find(u => u !== me.uid);
 
       box.innerHTML += `
         <div class="chat-item" onclick="openChat('${other}')">
           <div class="chat-name">${other}</div>
-          <div class="chat-last">${c.lastMessage || ""}</div>
+          <div class="chat-last">${chat.lastMessage || ""}</div>
         </div>
       `;
     });
@@ -81,8 +81,6 @@ window.openChat = function(uid) {
 
   document.getElementById("msgInput").disabled = false;
   document.getElementById("sendBtn").disabled = false;
-
-  document.getElementById("chatName").innerText = uid;
 
   loadMessages();
   listenTyping(uid);
@@ -106,13 +104,22 @@ function loadMessages() {
       box.innerHTML += `
         <div class="msg ${isMe ? "me" : "other"}">
           ${m.text}<br>
-          <small>${m.status || "sent"}</small>
+          <small>${renderStatus(m)}</small>
         </div>
       `;
     });
 
     box.scrollTop = box.scrollHeight;
+
+    markAsRead(snap);
   });
+}
+
+/* ================= STATUS ENGINE ================= */
+function renderStatus(m) {
+  if (m.readBy?.length > 1) return "✓✓";
+  if (m.delivered) return "✓✓";
+  return "✓";
 }
 
 /* ================= SEND MESSAGE ================= */
@@ -121,48 +128,67 @@ window.sendMsg = async function () {
   const text = input.value.trim();
   if (!text || !activeChat) return;
 
-  await addDoc(collection(db, "chats", activeChat, "messages"), {
+  const msgRef = await addDoc(collection(db, "chats", activeChat, "messages"), {
     text,
     senderId: me.uid,
     createdAt: serverTimestamp(),
-    status: "sent"
+    delivered: false,
+    readBy: [me.uid]
   });
 
-  await updateDoc(doc(db, "chats", activeChat), {
+  await setDoc(doc(db, "chats", activeChat), {
+    members: [me.uid],
     lastMessage: text,
-    lastUpdated: serverTimestamp(),
-    members: arrayUnion(me.uid)
-  });
+    lastUpdated: serverTimestamp()
+  }, { merge: true });
 
   input.value = "";
+  setTyping(false);
 };
 
-/* ================= TYPING ================= */
-document.getElementById("msgInput").addEventListener("input", async () => {
+/* ================= READ RECEIPTS ================= */
+function markAsRead(snap) {
+  snap.forEach(async (d) => {
+    const data = d.data();
+
+    if (data.senderId !== me.uid) {
+      await updateDoc(doc(db, "chats", activeChat, "messages", d.id), {
+        delivered: true,
+        readBy: arrayUnion(me.uid)
+      });
+    }
+  });
+}
+
+/* ================= TYPING SYSTEM ================= */
+document.getElementById("msgInput").addEventListener("input", () => {
+  setTyping(true);
+
+  clearTimeout(window.typingTimer);
+
+  window.typingTimer = setTimeout(() => {
+    setTyping(false);
+  }, 1200);
+});
+
+async function setTyping(state) {
   if (!activeChat) return;
 
   await setDoc(doc(db, "typing", me.uid), {
     chatId: activeChat,
-    typing: true
+    typing: state
   });
-
-  setTimeout(async () => {
-    await setDoc(doc(db, "typing", me.uid), {
-      chatId: activeChat,
-      typing: false
-    });
-  }, 1500);
-});
+}
 
 /* ================= LISTEN TYPING ================= */
 function listenTyping(uid) {
   const ref = doc(db, "typing", uid);
 
   onSnapshot(ref, (snap) => {
-    const d = snap.data();
+    const data = snap.data();
     const el = document.getElementById("typing");
 
-    if (d?.chatId === activeChat && d?.typing) {
+    if (data?.chatId === activeChat && data?.typing) {
       el.innerText = "typing...";
     } else {
       el.innerText = "";
