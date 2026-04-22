@@ -6,7 +6,10 @@ import {
   query,
   orderBy,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -14,7 +17,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let me = null;
-let otherUid = new URLSearchParams(location.search).get("uid");
+let otherUid = null;
 
 /* ================= AUTH ================= */
 onAuthStateChanged(auth, (u) => {
@@ -22,11 +25,7 @@ onAuthStateChanged(auth, (u) => {
 
   me = u;
 
-  setupUI();
-
-  if (otherUid) {
-    loadMessages();
-  }
+  loadUsers();
 });
 
 /* ================= CHAT ID ================= */
@@ -34,24 +33,42 @@ function chatId(a, b) {
   return [a, b].sort().join("_");
 }
 
-/* ================= UI STATE ================= */
-function setupUI() {
-  const input = document.getElementById("msgInput");
-  const btn = document.getElementById("sendBtn");
-  const warn = document.getElementById("warn");
+/* ================= USERS LIST ================= */
+function loadUsers() {
+  const q = query(collection(db, "users"));
 
-  if (!otherUid) {
-    warn.innerText = "⚠️ Select a user to start chatting (DM mode required)";
-    input.disabled = true;
-    btn.disabled = true;
-  } else {
-    warn.innerText = "💬 Direct Message Active";
-    input.disabled = false;
-    btn.disabled = false;
-  }
+  onSnapshot(q, (snap) => {
+    const box = document.getElementById("users");
+    box.innerHTML = "";
+
+    snap.forEach(d => {
+      const user = d.data();
+      const uid = d.id;
+
+      if (uid === me.uid) return;
+
+      box.innerHTML += `
+        <div class="user" onclick="openChat('${uid}')">
+          <span>${user.name || "User"}</span>
+          <span class="online">${user.online ? "🟢" : "⚪"}</span>
+        </div>
+      `;
+    });
+  });
 }
 
-/* ================= LOAD ================= */
+/* ================= OPEN CHAT ================= */
+window.openChat = function(uid) {
+  otherUid = uid;
+
+  document.getElementById("msgInput").disabled = false;
+  document.getElementById("sendBtn").disabled = false;
+
+  loadMessages();
+  listenTyping();
+};
+
+/* ================= LOAD MESSAGES ================= */
 function loadMessages() {
   const id = chatId(me.uid, otherUid);
 
@@ -66,39 +83,35 @@ function loadMessages() {
 
     snap.forEach(d => {
       const m = d.data();
-
       const isMe = m.sender === me.uid;
 
       box.innerHTML += `
         <div class="msg ${isMe ? "me" : "other"}">
-          <b>${isMe ? "You" : "User"}</b><br>
-          ${m.text}
+          ${m.text}<br>
+          <small>${m.read ? "✓✓" : "✓"}</small>
         </div>
       `;
     });
 
-    // auto scroll like WhatsApp
     box.scrollTop = box.scrollHeight;
   });
 }
 
-/* ================= SEND ================= */
+/* ================= SEND MESSAGE ================= */
 window.sendMsg = async function () {
-  if (!otherUid) return;
-
   const input = document.getElementById("msgInput");
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || !otherUid) return;
 
   const id = chatId(me.uid, otherUid);
 
   await addDoc(collection(db, "messages", id, "messages"), {
     text,
     sender: me.uid,
-    time: serverTimestamp()
+    time: serverTimestamp(),
+    read: false
   });
 
-  /* 🔔 notification */
   await addDoc(collection(db, "notifications", otherUid, "items"), {
     text: "New message received",
     seen: false,
@@ -106,22 +119,45 @@ window.sendMsg = async function () {
   });
 
   input.value = "";
+
+  setTyping(false);
 };
 
-/* ================= FRIEND REQUEST (FIXED BUG) ================= */
-window.sendFriendRequest = async function (toUid, toName) {
-  await addDoc(collection(db, "friendRequests"), {
-    from: me.uid,   // ✅ FIXED (was user.uid)
-    fromName: me.email.split("@")[0],
-    to: toUid,
-    toName,
-    status: "pending",
-    createdAt: serverTimestamp()
+/* ================= TYPING ================= */
+document.getElementById("msgInput").addEventListener("input", () => {
+  setTyping(true);
+});
+
+async function setTyping(state) {
+  if (!otherUid) return;
+
+  await updateDoc(doc(db, "typing", me.uid), {
+    typingTo: state ? otherUid : null
+  });
+}
+
+function listenTyping() {
+  const ref = doc(db, "typing", otherUid);
+
+  onSnapshot(ref, (snap) => {
+    const data = snap.data();
+    const el = document.getElementById("typing");
+
+    if (data?.typingTo === me.uid) {
+      el.innerText = "User is typing...";
+    } else {
+      el.innerText = "";
+    }
+  });
+}
+
+/* ================= ONLINE STATUS ================= */
+setInterval(async () => {
+  if (!me) return;
+
+  await updateDoc(doc(db, "users", me.uid), {
+    online: true,
+    lastSeen: serverTimestamp()
   });
 
-  await addDoc(collection(db, "notifications", toUid, "items"), {
-    text: `${me.email.split("@")[0]} sent you a friend request`,
-    seen: false,
-    createdAt: serverTimestamp()
-  });
-};
+}, 10000);
