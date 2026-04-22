@@ -73,7 +73,6 @@
       font-size: 14px;
     }
 
-    /* 🔥 DEBUG BUTTON STYLE */
     .debug-btn {
       background: #f4d35e !important;
       color: #000;
@@ -133,11 +132,13 @@
     <button onclick="createAd()">Publish Ad</button>
   </div>
 
-  <!-- AUTO BLOG -->
+  <!-- BLOG -->
   <div class="card">
-    <h3>🤖 Auto Blog Generator</h3>
-    <input id="blogTopic" placeholder="Enter Topic (e.g Crypto)">
-    <button onclick="generateBlog()">Generate Blog</button>
+    <h3>📝 Create Blog Post</h3>
+    <input id="blogTitle" placeholder="Blog Title">
+    <textarea id="blogContent" placeholder="Blog Content"></textarea>
+    <input id="blogImage" placeholder="Image URL (optional)">
+    <button onclick="createBlog()">Publish Blog</button>
   </div>
 
   <!-- ANALYTICS -->
@@ -153,131 +154,9 @@
     <button onclick="loadStats()">Refresh Stats</button>
   </div>
 
-  <!-- 🔥 NEW: DEBUG PANEL -->
-  <div class="card" id="debugCard" style="display:none;">
-    <h3>🛠 Debug System</h3>
-    <button id="debugBtn" class="debug-btn">Run Debug</button>
-    <div id="debugOutput" class="list-box"></div>
-  </div>
-
 </div>
 
 <script type="module" src="admin.js"></script>
-
-<script type="module">
-import { auth, db } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-/* 🔐 CONTROL DEBUG ACCESS */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
-
-  const snap = await getDoc(doc(db, "users", user.uid));
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-
-  const debugCard = document.getElementById("debugCard");
-
-  // ✅ Admin + Premium ONLY
-  if (data.role === "admin" || data.isPremium === true) {
-    debugCard.style.display = "block";
-  }
-});
-
-/* 🛠 DEBUG FUNCTION */
-document.getElementById("debugBtn").onclick = async () => {
-  const output = document.getElementById("debugOutput");
-  output.innerHTML = "Running debug...<br>";
-
-  try {
-    const user = auth.currentUser;
-
-    output.innerHTML += "User: " + (user?.email || "None") + "<br>";
-
-    const snap = await getDoc(doc(db, "users", user.uid));
-
-    if (snap.exists()) {
-      const data = snap.data();
-
-      output.innerHTML += "Role: " + data.role + "<br>";
-      output.innerHTML += "Premium: " + data.isPremium + "<br>";
-    }
-
-    output.innerHTML += "✅ Debug Complete";
-
-  } catch (err) {
-    output.innerHTML += "❌ Error: " + err.message;
-  }
-};
-</script>
-
-<script>
-
-/* ================= CREATE AD ================= */
-async function createAd() {
-  const title = document.getElementById("adTitle").value;
-  const text = document.getElementById("adText").value;
-  const link = document.getElementById("adLink").value;
-
-  if (!title || !text || !link) {
-    alert("Fill all ad fields");
-    return;
-  }
-
-  await fetch("https://mxm-backend.onrender.com/ads/create", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ title, text, link })
-  });
-
-  alert("Ad created successfully");
-}
-
-/* ================= AUTO BLOG ================= */
-async function generateBlog() {
-  const topic = document.getElementById("blogTopic").value;
-
-  if (!topic) {
-    alert("Enter a topic");
-    return;
-  }
-
-  await fetch("https://mxm-backend.onrender.com/blog/auto-create", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ topic })
-  });
-
-  alert("Auto blog created");
-}
-
-/* ================= ANALYTICS ================= */
-async function loadStats() {
-  try {
-    const res = await fetch("https://mxm-backend.onrender.com/admin/stats");
-    const data = await res.json();
-
-    document.getElementById("statUsers").innerText = data.users.total;
-    document.getElementById("statPremium").innerText = data.users.premium;
-    document.getElementById("statViews").innerText = data.blogs.views;
-    document.getElementById("statClicks").innerText = data.ads.clicks;
-    document.getElementById("statRevenue").innerText =
-      (data.ads.estimatedRevenue || 0).toFixed(2);
-
-  } catch (err) {
-    console.log("Stats error:", err);
-  }
-}
-
-loadStats();
-
-</script>
 
 </body>
 </html>
