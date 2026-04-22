@@ -14,7 +14,7 @@
       color: white;
     }
 
-    /* ================= NAVBAR FIXED LAYOUT ================= */
+    /* ================= NAVBAR FIXED ================= */
     .navbar {
       display: flex;
       align-items: center;
@@ -45,40 +45,13 @@
       gap: 10px;
     }
 
-    /* ================= HAMBURGER MENU ================= */
-    .menu {
-      z-index: 9999;
-      width: 200px;
-      background: #1c2541;
-      border-radius: 12px;
-      display: none;
-      flex-direction: column;
-      position: absolute;
-      top: 50px;
-      left: 10px;
-    }
-
-    .menu.active {
-      display: flex;
-    }
-
-    .menu button {
-      width: 100%;
-      text-align: left;
-      padding: 10px;
-      background: transparent;
-      border: none;
-      color: white;
-      cursor: pointer;
-    }
-
-    /* ================= NOTIFICATION ================= */
+    /* 🔔 CENTER FIXED BETWEEN TITLE & LOGOUT */
     .notif-wrapper {
-      position: relative;
+      position: absolute;
+      left: 50%;
+      transform: translateX(60px);
       cursor: pointer;
       font-size: 18px;
-      display: flex;
-      align-items: center;
     }
 
     .notif-badge {
@@ -106,7 +79,34 @@
       z-index: 9999;
     }
 
-    /* ================= ADS ================= */
+    /* ================= MENU ================= */
+    .menu {
+      z-index: 9999;
+      width: 200px;
+      background: #1c2541;
+      border-radius: 12px;
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      top: 50px;
+      left: 10px;
+    }
+
+    .menu.active {
+      display: flex;
+    }
+
+    .menu button {
+      width: 100%;
+      text-align: left;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* ================= ADS FIX ================= */
     .ads-container {
       overflow: hidden;
       position: relative;
@@ -114,19 +114,21 @@
 
     .ads-slider {
       display: flex;
-      transition: transform 0.5s ease;
+      transition: transform 0.6s ease;
+      scroll-snap-type: x mandatory;
     }
 
     .ad {
       min-width: 100%;
       text-align: center;
-      padding: 15px;
+      padding: 18px;
       background: #0b132b;
       border-radius: 8px;
       font-size: 13px;
+      scroll-snap-align: center;
     }
 
-    /* ================= CARDS ================= */
+    /* ================= CARD ================= */
     .container {
       padding: 10px;
     }
@@ -153,7 +155,6 @@
 
 <body>
 
-<!-- ================= NAVBAR ================= -->
 <div class="navbar">
 
   <div class="nav-left">
@@ -162,20 +163,19 @@
 
   <h3 class="nav-title">MCN Engine</h3>
 
-  <div class="nav-right">
-
-    <!-- 🔔 CENTERED FEATURE (FIXED POSITION LOGIC) -->
-    <div class="notif-wrapper" onclick="toggleNotif()">
-      🔔
-      <span id="notifCount" class="notif-badge"></span>
-    </div>
-
-    <button onclick="logout()">Logout</button>
-
+  <!-- 🔔 CENTERED -->
+  <div class="notif-wrapper" onclick="toggleNotif()">
+    🔔
+    <span id="notifCount" class="notif-badge"></span>
   </div>
+
+  <div class="nav-right">
+    <button onclick="logout()">Logout</button>
+  </div>
+
 </div>
 
-<!-- NOTIFICATIONS PANEL -->
+<!-- NOTIFICATIONS -->
 <div id="notifPanel" class="notif-panel"></div>
 
 <!-- MENU -->
@@ -190,13 +190,11 @@
   <button onclick="goAdmin()">🔐 Admin</button>
 </div>
 
-<!-- ================= MAIN ================= -->
+<!-- MAIN -->
 <div class="container">
 
-  <!-- ADS -->
   <div class="card">
     <h4>🔥 Sponsored Ads</h4>
-
     <div class="ads-container">
       <div class="ads-slider" id="adsSlider">
         <div class="ad">🚀 Promote your project here</div>
@@ -206,13 +204,11 @@
     </div>
   </div>
 
-  <!-- PRICES -->
   <div class="card">
     <h4>📊 Live Prices</h4>
     <div id="priceBox">Loading...</div>
   </div>
 
-  <!-- DISCOVER FEED -->
   <div class="card">
     <h4>📰 Discover Feed</h4>
     <div id="discoverBox">Loading feed...</div>
@@ -222,44 +218,11 @@
 
 <script type="module" src="dashboard.js"></script>
 
-<!-- DISCOVER SCRIPT (SAFE - NO FIREBASE CONFLICT) -->
 <script>
-async function loadDiscover() {
-  const box = document.getElementById("discoverBox");
-
-  try {
-    const res = await fetch("https://mxm-backend.onrender.com/blog/list");
-    const data = await res.json();
-
-    box.innerHTML = "";
-
-    data.forEach(post => {
-      box.innerHTML += `
-        <div class="card" onclick="openPost('${post.id}')">
-
-          ${post.image ? `<img src="${post.image}">` : ""}
-
-          <div>
-            <b style="color:#5bc0be">${post.title}</b>
-            <p style="font-size:12px;opacity:0.8;">
-              ${(post.content || "").substring(0,120)}...
-            </p>
-          </div>
-
-        </div>
-      `;
-    });
-
-  } catch (e) {
-    box.innerHTML = "Failed to load feed";
-  }
+function toggleNotif() {
+  const panel = document.getElementById("notifPanel");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
 }
-
-function openPost(id) {
-  location.href = "post.html?id=" + id;
-}
-
-loadDiscover();
 </script>
 
 </body>
