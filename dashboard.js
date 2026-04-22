@@ -257,3 +257,12 @@ function loadNotifications() {
     }
   });
 }
+
+/* ADS SLIDER */
+setInterval(() => {
+  const slider = document.getElementById("adsSlider");
+  if (!slider) return;
+
+  const ads = slider.children;
+  slider.appendChild(ads[0]);
+}, 3000);
