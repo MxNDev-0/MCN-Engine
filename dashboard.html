@@ -33,11 +33,12 @@
       cursor: pointer;
     }
 
-    /* 🔔 NOTIFICATION SYSTEM */
+    /* 🔔 NOTIFICATION */
     .notif-wrapper {
       position: relative;
       cursor: pointer;
-      font-size: 16px; /* ✅ reduced size */
+      font-size: 16px;
+      padding: 5px;
     }
 
     .notif-badge {
@@ -63,81 +64,61 @@
       border-radius: 12px;
       display: none;
       z-index: 9999;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
 
-    .notif-item {
-      padding: 10px;
-      border-bottom: 1px solid #0b132b;
-      cursor: pointer;
-    }
-
-    .notif-item:hover {
-      background: #0b132b;
-    }
-
-    #chatBox {
-      max-height: 250px;
-      overflow-y: auto;
-      background: #0b132b;
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    .row {
-      display: flex;
-      gap: 5px;
-    }
-
-    .row input {
-      flex: 1;
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      background: #1c2541;
-      color: white;
-    }
-
-    .row button {
-      background: #5bc0be;
-      border: none;
-      border-radius: 6px;
-      padding: 8px;
-    }
-
-    .earn-card {
-      text-align: center;
-    }
-
-    .earn-card button {
-      display: inline-block;
-    }
-
-    .price-box {
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    /* ✅ NEW HEADER FIX */
+    /* HEADER FIX */
     .navbar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      position: relative;
+      padding: 8px 10px;
+      background: #1c2541;
     }
 
-    .nav-left,
-    .nav-right {
-      width: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .nav-left button {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      font-size: 18px;
+      border-radius: 8px;
     }
 
     .nav-title {
       flex: 1;
       text-align: center;
       margin: 0;
+      font-size: 18px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-right button {
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+
+    /* ADS */
+    .ads-slider {
+      display: flex;
+      overflow: hidden;
+    }
+
+    .ad {
+      min-width: 100%;
+      text-align: center;
+      padding: 15px;
+      background: #0b132b;
+      border-radius: 8px;
+    }
+
+    /* CHAT BUTTON FIX */
+    #chatBox button {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 6px;
     }
   </style>
 </head>
@@ -145,7 +126,6 @@
 <body>
 
 <div class="navbar">
-
   <div class="nav-left">
     <button onclick="toggleMenu()">☰</button>
   </div>
@@ -160,58 +140,49 @@
 
     <button onclick="logout()">Logout</button>
   </div>
-
 </div>
-<!-- 🔔 PANEL -->
+
 <div id="notifPanel" class="notif-panel"></div>
 
 <div id="menu" class="menu">
   <button onclick="goHome()">🏠 Home</button>
   <button onclick="goProfile()">👤 Profile</button>
-
-  <!-- 🔥 DM SYSTEM -->
   <button onclick="goMessages()">💬 Messages</button>
-
   <button onclick="goAdSpace()">🚀 Ads</button>
   <button onclick="goBlog()">📰 Blog</button>
   <button onclick="goFaq()">❓ FAQ</button>
   <button onclick="goAbout()">ℹ️ About</button>
-
   <button onclick="support()">💰 Support</button>
   <button onclick="openDeveloper()">💻 Dev</button>
-
   <button onclick="goAdmin()">🔐 Admin</button>
 </div>
 
 <div class="container">
 
+  <!-- ADS INSTEAD OF USERS -->
   <div class="card">
-    <h4>🟢 Live Users</h4>
-    <div id="onlineUsers"></div>
+    <h4>🔥 Sponsored Ads</h4>
+    <div class="ads-slider" id="adsSlider">
+      <div class="ad">🚀 Promote your project here</div>
+      <div class="ad">💰 Buy ad space on MCN Engine</div>
+      <div class="ad">📢 Your ad here</div>
+    </div>
   </div>
 
   <div class="card">
     <h4>📊 Live Prices</h4>
-    <div class="price-box" id="priceBox">Loading prices...</div>
+    <div id="priceBox">Loading...</div>
   </div>
 
-  <!-- CHAT -->
   <div class="card">
     <h4>💬 Community Chat</h4>
 
     <div id="chatBox"></div>
-    <div id="typingBox"></div>
 
     <div class="row">
       <input id="chatInput">
       <button onclick="sendMessage()">Send</button>
     </div>
-  </div>
-
-  <!-- EARN (RESTORED) -->
-  <div class="card earn-card">
-    <h4>💰 Earn</h4>
-    <button onclick="location.href='earn/index.html'">Open</button>
   </div>
 
 </div>
