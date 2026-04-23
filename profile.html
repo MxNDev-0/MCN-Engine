@@ -4,8 +4,6 @@
   <title>MCN Engine Profile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="style.css">
-
   <style>
     body {
       margin: 0;
@@ -30,101 +28,23 @@
       cursor: pointer;
     }
 
-    .profile-header {
-      display: flex;
-      align-items: center;
-      background: #1c2541;
-      margin: 10px;
-      padding: 10px;
-      border-radius: 12px;
-    }
-
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #5bc0be;
-    }
-
-    .username {
-      margin-left: 10px;
-      color: #5bc0be;
-      font-weight: bold;
-    }
-
-    .card {
-      background: #1c2541;
-      margin: 10px;
-      padding: 10px;
-      border-radius: 12px;
-    }
-
-    #postInput {
-      width: 100%;
-      min-height: 120px;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      background: #0b132b;
-      color: white;
-      box-sizing: border-box;
-    }
-
-    .post {
-      background: #0b132b;
-      padding: 10px;
-      border-radius: 10px;
-      margin-top: 10px;
-      position: relative;
-    }
-
-    .menu-box {
+    /* 🔥 DROPDOWN MENU */
+    .menu {
       display: none;
-      position: absolute;
-      right: 10px;
-      top: 30px;
       background: #1c2541;
-      border-radius: 8px;
-      overflow: hidden;
-      z-index: 10;
+      padding: 10px;
     }
 
-    .menu-box button {
+    .menu button, .menu input {
       width: 100%;
+      margin-top: 6px;
       padding: 8px;
-      background: none;
+      border-radius: 6px;
       border: none;
-      color: white;
-      text-align: left;
-      cursor: pointer;
     }
 
-    .popup {
-      display: none;
-      position: fixed;
-      top: 20%;
-      left: 10%;
-      right: 10%;
-      background: #1c2541;
-      padding: 12px;
-      border-radius: 12px;
-    }
-
-    .icon-row {
-      display: flex;
-      gap: 10px;
-      margin: 10px;
-    }
-
-    .icon-box {
-      background: #1c2541;
-      padding: 10px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    /* 🔥 NEW: SMALL PROFILE MONITOR */
-    .mini-monitor {
+    /* 🔥 MONITOR */
+    .monitor {
       background: #000;
       color: #00ff88;
       font-family: monospace;
@@ -135,6 +55,21 @@
       border-radius: 10px;
       margin: 10px;
       border: 1px solid #5bc0be;
+    }
+
+    /* 🔥 ACTIVITY PANEL */
+    .card {
+      background: #1c2541;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 12px;
+    }
+
+    .item {
+      background: #0b132b;
+      padding: 8px;
+      border-radius: 8px;
+      margin-top: 6px;
     }
   </style>
 </head>
@@ -148,48 +83,60 @@
   <button class="icon-btn" onclick="toggleMenu()">☰</button>
 </div>
 
-<!-- MENU -->
-<div id="dropdownMenu" style="display:none;padding:10px;">
+<!-- 🔥 HAMBURGER MENU -->
+<div id="menu" class="menu">
+
+  <b id="usernameDisplay">Loading...</b>
+
   <input id="usernameInput" placeholder="New username">
   <button onclick="updateUsername()">Save Username</button>
+
   <button onclick="resetPassword()">Reset Password</button>
+
+  <hr>
+
+  <button onclick="openRequests()">👥 Friend Requests</button>
+  <button onclick="openFriends()">👤 Friends</button>
+
 </div>
 
-<!-- PROFILE HEADER -->
-<div class="profile-header">
-  <div class="avatar"></div>
-  <div class="username" id="usernameDisplay">Loading...</div>
-</div>
-
-<!-- FRIEND ICONS -->
-<div class="icon-row">
-  <div class="icon-box" onclick="openRequests()">👥 Requests</div>
-  <div class="icon-box" onclick="openFriends()">👤 Friends</div>
-</div>
-
-<!-- 🔥 MINI LIVE MONITOR (NEW) -->
-<div class="mini-monitor" id="profileMonitor">
+<!-- 🔥 MONITOR (TOP POSITION NOW) -->
+<div class="monitor" id="profileMonitor">
   [SYSTEM] Profile monitor initialized...
 </div>
 
+<!-- 🔥 USER ACTIVITY PANEL -->
+<div class="card">
+  <h4>📊 Activity</h4>
+
+  <div class="item">Ad Status: <b id="adStatus">No active ads</b></div>
+  <div class="item">Remaining Time: <b id="adTime">--</b></div>
+  <div class="item">Clicks: <b id="adClicks">0</b></div>
+  <div class="item">Messages: <b id="msgCount">0</b></div>
+
+</div>
+
 <!-- POPUPS -->
-<div id="requestsPopup" class="popup">
+<div id="requestsPopup" class="card" style="display:none;">
   <h4>Friend Requests</h4>
   <div id="friendRequestsBox"></div>
   <button onclick="closePopup('requestsPopup')">Close</button>
 </div>
 
-<div id="friendsPopup" class="popup">
+<div id="friendsPopup" class="card" style="display:none;">
   <h4>Friends</h4>
   <div id="friendsBox"></div>
   <button onclick="closePopup('friendsPopup')">Close</button>
 </div>
 
-<!-- CREATE POST REMOVED (as requested) -->
-
 <script type="module" src="profile.js"></script>
 
 <script>
+function toggleMenu(){
+  const m = document.getElementById("menu");
+  m.style.display = m.style.display === "block" ? "none" : "block";
+}
+
 function openRequests(){
   document.getElementById("requestsPopup").style.display = "block";
 }
