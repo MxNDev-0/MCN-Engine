@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>MCN Engine V16 - Admin Control Panel</title>
+  <title>MCN Engine v1.6 - Admin Control Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="style.css">
@@ -62,7 +62,6 @@
       border-radius: 8px;
     }
 
-    /* 🔥 MONITOR */
     .monitor {
       background: #000;
       color: #0f0;
@@ -71,28 +70,21 @@
       font-family: monospace;
       padding: 10px;
       border-radius: 8px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 
 <body>
 
-<h2>👑 MCN Admin Panel V16</h2>
+<h2>👑 MCN Engine v1.6 - Admin Control Panel</h2>
 
 <div class="grid">
 
-  <!-- 🔥 MONITOR -->
+  <!-- MONITOR -->
   <div class="card">
     <h3>🖥 Live Monitor</h3>
     <div id="monitor" class="monitor"></div>
-  </div>
-
-  <!-- EARNINGS -->
-  <div class="card">
-    <h3>➕ Earnings</h3>
-    <input id="source" placeholder="Source">
-    <input id="amount" placeholder="Amount">
-    <button onclick="addEarning()">Add Earnings</button>
   </div>
 
   <!-- USERS -->
@@ -101,7 +93,7 @@
     <div id="usersList" class="list-box"></div>
   </div>
 
-  <!-- 🔥 AD REQUESTS -->
+  <!-- AD REQUESTS -->
   <div class="card">
     <h3>📢 Ad Payment Requests</h3>
     <div id="upgradeList" class="list-box"></div>
@@ -117,9 +109,9 @@
   <!-- BLOG -->
   <div class="card">
     <h3>📝 Create Blog</h3>
-    <input id="blogTitle">
-    <textarea id="blogContent"></textarea>
-    <input id="blogImage">
+    <input id="blogTitle" placeholder="Title">
+    <textarea id="blogContent" placeholder="Content"></textarea>
+    <input id="blogImage" placeholder="Image URL">
     <button onclick="createBlog()">Publish</button>
   </div>
 
