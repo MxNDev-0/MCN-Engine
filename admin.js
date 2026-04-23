@@ -2,11 +2,9 @@ import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
-  doc, collection, addDoc,
-  onSnapshot, deleteDoc,
-  updateDoc, query,
-  orderBy, getDocs,
-  writeBatch, getDoc
+  doc, setDoc, addDoc, collection,
+  onSnapshot, deleteDoc, updateDoc,
+  query, orderBy, getDocs, writeBatch, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* ================= ADMIN GUARD ================= */
@@ -34,20 +32,16 @@ function log(msg) {
 
 /* ================= BLOG ================= */
 window.createBlog = async () => {
-  const title = document.getElementById("blogTitle");
-  const content = document.getElementById("blogContent");
-  const image = document.getElementById("blogImage");
+  const title = blogTitle.value;
+  const content = blogContent.value;
+  const image = blogImage.value;
 
-  if (!title.value || !content.value) return alert("Fill fields");
+  if (!title || !content) return alert("Fill fields");
 
   const res = await fetch("https://mxm-backend.onrender.com/blog/create", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      title: title.value.trim(),
-      content: content.value.trim(),
-      image: image.value.trim()
-    })
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ title, content, image })
   });
 
   const data = await res.json();
@@ -55,11 +49,14 @@ window.createBlog = async () => {
   if (data.success) {
     alert("Blog posted ✅");
 
-    title.value = "";
-    content.value = "";
-    image.value = "";
+    // ✅ CLEAR INPUTS FIXED
+    blogTitle.value = "";
+    blogContent.value = "";
+    blogImage.value = "";
 
-    log("Blog created: " + title.value);
+    log("Blog created: " + title);
+  } else {
+    alert("Failed ❌");
   }
 };
 
@@ -76,8 +73,8 @@ function loadAdRequests() {
       box.innerHTML += `
         <div class="item">
           <b>${ad.title}</b><br>
-          Duration: ${ad.duration || "N/A"}<br>
-          Status: <b>${ad.status || "pending"}</b><br><br>
+          ${ad.email || ""}<br>
+          Status: ${ad.status || "pending"}<br><br>
 
           <button onclick="approveAd('${d.id}')">Approve</button>
           <button onclick="rejectAd('${d.id}')">Reject</button>
@@ -89,10 +86,13 @@ function loadAdRequests() {
   });
 }
 
+/* 🔥 AD APPROVAL SYSTEM */
 window.approveAd = async (id) => {
   await updateDoc(doc(db, "adRequests", id), {
-    status: "approved"
+    status: "approved",
+    approvedAt: Date.now()
   });
+
   log("Ad approved: " + id);
 };
 
@@ -100,6 +100,7 @@ window.rejectAd = async (id) => {
   await updateDoc(doc(db, "adRequests", id), {
     status: "rejected"
   });
+
   log("Ad rejected: " + id);
 };
 
@@ -109,12 +110,16 @@ function loadUsers() {
 
   onSnapshot(collection(db, "onlineUsers"), (snap) => {
     box.innerHTML = "";
-    document.getElementById("statUsers").innerText = snap.size;
 
     snap.forEach(d => {
       const u = d.data();
-      box.innerHTML += `<div class="item">${u.email || "user"}</div>`;
+
+      box.innerHTML += `
+        <div class="item">${u.email || "user"}</div>
+      `;
     });
+
+    document.getElementById("statUsers").innerText = snap.size;
   });
 }
 
@@ -153,27 +158,15 @@ window.clearAllPosts = async () => {
   log("All posts cleared");
 };
 
-/* ================= STATS ================= */
+/* ================= ANALYTICS ================= */
 window.loadStats = async () => {
   const blogs = await getDocs(collection(db, "blogs"));
 
-  let clicks = 0;
-  const ads = await getDocs(collection(db, "adRequests"));
-
-  ads.forEach(d => clicks += d.data().clicks || 0);
-
   document.getElementById("statViews").innerText = blogs.size;
-  document.getElementById("statClicks").innerText = clicks;
+  log("Stats refreshed");
 };
 
 /* ================= INIT ================= */
-function boot() {
-  log("MCN Engine Admin Booting...");
-  log("System Online");
-
-  loadUsers();
-  loadPosts();
-  loadAdRequests();
-}
-
-boot();
+loadUsers();
+loadPosts();
+loadAdRequests();
