@@ -14,6 +14,7 @@
       color: white;
     }
 
+    /* ================= NAVBAR ================= */
     .navbar {
       display: flex;
       align-items: center;
@@ -32,9 +33,6 @@
 
     .nav-title {
       font-size: 18px;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
     }
 
     .nav-right {
@@ -43,6 +41,7 @@
       gap: 10px;
     }
 
+    /* ================= MENU ================= */
     .menu {
       display: none;
       flex-direction: column;
@@ -53,6 +52,7 @@
       background: #1c2541;
       border-radius: 10px;
       z-index: 9999;
+      overflow: hidden;
     }
 
     .menu.active {
@@ -68,6 +68,45 @@
       cursor: pointer;
     }
 
+    .menu button:hover {
+      background: #243256;
+    }
+
+    /* ================= NOTIFICATION ================= */
+    .notif-wrapper {
+      position: relative;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: -5px;
+      right: -8px;
+      background: red;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 10px;
+      display: none;
+    }
+
+    .notif-panel {
+      position: absolute;
+      top: 50px;
+      right: 10px;
+      width: 280px;
+      max-height: 350px;
+      overflow-y: auto;
+      background: #1c2541;
+      border-radius: 12px;
+      display: none;
+      z-index: 9999;
+    }
+
+    /* ================= CONTAINER ================= */
     .container {
       padding: 10px;
     }
@@ -79,38 +118,27 @@
       border-radius: 10px;
     }
 
+    /* ================= ADS ================= */
     .ads-container {
       overflow: hidden;
       position: relative;
-      padding: 10px 0;
     }
 
     .ads-slider {
       display: flex;
-      transition: transform 0.6s ease;
-      align-items: center;
+      transition: transform 0.5s ease;
     }
 
     .ad {
       min-width: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .ad-box {
-      width: 80%;
-      max-width: 320px;
       text-align: center;
-      padding: 14px;
-      background: linear-gradient(135deg, #5bc0be, #3a86ff);
-      color: #000;
-      border-radius: 12px;
+      padding: 15px;
+      background: #0b132b;
+      border-radius: 8px;
       font-size: 13px;
-      font-weight: bold;
-      margin: auto;
     }
 
+    /* ================= DISCOVER ================= */
     #discoverBox .card {
       cursor: pointer;
     }
@@ -120,26 +148,21 @@
       border-radius: 8px;
     }
 
-    .read-more {
-      margin-top: 8px;
-      font-size: 12px;
-      color: #5bc0be;
-      cursor: pointer;
-    }
-
+    /* ================= LANGUAGE ================= */
     .lang-select {
-      background: #5bc0be;
-      border: none;
-      padding: 6px;
+      background: #0b132b;
+      color: white;
+      border: 1px solid #5bc0be;
       border-radius: 6px;
-      font-weight: bold;
+      padding: 5px;
+      font-size: 12px;
     }
   </style>
 </head>
 
 <body>
 
-<!-- NAVBAR -->
+<!-- ================= NAVBAR ================= -->
 <div class="navbar">
 
   <div class="nav-left">
@@ -150,7 +173,14 @@
 
   <div class="nav-right">
 
-    <select class="lang-select" onchange="setLang(this.value)">
+    <!-- 🔔 NOTIFICATION -->
+    <div class="notif-wrapper" onclick="toggleNotif()">
+      🔔
+      <span id="notifCount" class="notif-badge"></span>
+    </div>
+
+    <!-- 🌐 LANGUAGE -->
+    <select class="lang-select" onchange="setLanguage(this.value)">
       <option value="en">EN</option>
       <option value="fr">FR</option>
       <option value="es">ES</option>
@@ -160,54 +190,50 @@
   </div>
 </div>
 
-<!-- MENU -->
+<!-- NOTIF PANEL -->
+<div id="notifPanel" class="notif-panel"></div>
+
+<!-- ================= MENU ================= -->
 <div id="menu" class="menu">
-  <button data-i18n="home" onclick="goHome()">🏠 Home</button>
-  <button data-i18n="profile" onclick="goProfile()">👤 Profile</button>
-  <button data-i18n="messages" onclick="goMessages()">💬 Messages</button>
-  <button data-i18n="ads" onclick="goAdSpace()">🚀 Ads</button>
-  <button data-i18n="blog" onclick="goBlog()">📰 Blog</button>
-  <button data-i18n="faq" onclick="goFaq()">❓ FAQ</button>
-  <button data-i18n="about" onclick="goAbout()">ℹ️ About</button>
-  <button data-i18n="donate" onclick="donate()">💰 Donate</button>
-  <button data-i18n="admin" onclick="goAdmin()">🔐 Admin</button>
-  <button data-i18n="logout" onclick="logout()">🚪 Logout</button>
+  <button onclick="goHome()" data-i18n="home">🏠 Home</button>
+  <button onclick="goProfile()" data-i18n="profile">👤 Profile</button>
+  <button onclick="goMessages()" data-i18n="messages">💬 Messages</button>
+  <button onclick="goAdSpace()" data-i18n="ads">🚀 Ads</button>
+  <button onclick="goBlog()" data-i18n="blog">📰 Blog</button>
+  <button onclick="goFaq()" data-i18n="faq">❓ FAQ</button>
+  <button onclick="goAbout()" data-i18n="about">ℹ️ About</button>
+
+  <button onclick="goAdmin()">🔐 Admin</button>
+
+  <!-- ✅ RESTORED LOGOUT (LAST ITEM) -->
+  <button onclick="logout()">🚪 Logout</button>
 </div>
 
+<!-- ================= MAIN ================= -->
 <div class="container">
 
   <!-- ADS -->
   <div class="card">
-    <h4 data-i18n="ads_title">🔥 Sponsored Ads</h4>
+    <h4>🔥 Sponsored Ads</h4>
 
     <div class="ads-container">
       <div class="ads-slider" id="adsSlider">
-
-        <div class="ad">
-          <div class="ad-box" data-i18n="ad1">🚀 Promote your project here</div>
-        </div>
-
-        <div class="ad">
-          <div class="ad-box" data-i18n="ad2">💰 Buy ad space on MCN Engine</div>
-        </div>
-
-        <div class="ad">
-          <div class="ad-box" data-i18n="ad3">📢 Your ad here</div>
-        </div>
-
+        <div class="ad">🚀 Promote your project here</div>
+        <div class="ad">💰 Buy ad space on MCN Engine</div>
+        <div class="ad">📢 Your ad here</div>
       </div>
     </div>
   </div>
 
   <!-- PRICES -->
   <div class="card">
-    <h4 data-i18n="prices">📊 Live Prices</h4>
+    <h4>📊 Live Prices</h4>
     <div id="priceBox">Loading...</div>
   </div>
 
   <!-- DISCOVER -->
   <div class="card">
-    <h4 data-i18n="discover">📰 Discover Feed</h4>
+    <h4>📰 Discover Feed</h4>
     <div id="discoverBox">Loading feed...</div>
   </div>
 
@@ -216,172 +242,49 @@
 <script type="module" src="dashboard.js"></script>
 
 <script>
-/* ================= LANGUAGE SYSTEM ================= */
 
-const translations = {
-  en: {
-    title: "MCN Engine",
-    home: "Home",
-    profile: "Profile",
-    messages: "Messages",
-    ads: "Ads",
-    blog: "Blog",
-    faq: "FAQ",
-    about: "About",
-    donate: "Donate",
-    admin: "Admin",
-    logout: "Logout",
-    ads_title: "🔥 Sponsored Ads",
-    ad1: "🚀 Promote your project here",
-    ad2: "💰 Buy ad space on MCN Engine",
-    ad3: "📢 Your ad here",
-    prices: "📊 Live Prices",
-    discover: "📰 Discover Feed"
-  },
-
-  fr: {
-    title: "Moteur MCN",
-    home: "Accueil",
-    profile: "Profil",
-    messages: "Messages",
-    ads: "Publicité",
-    blog: "Blog",
-    faq: "FAQ",
-    about: "À propos",
-    donate: "Don",
-    admin: "Admin",
-    logout: "Déconnexion",
-    ads_title: "🔥 Publicités sponsorisées",
-    ad1: "🚀 Faites la promotion ici",
-    ad2: "💰 Achetez un espace pub",
-    ad3: "📢 Votre pub ici",
-    prices: "📊 Prix en direct",
-    discover: "📰 Découverte"
-  },
-
-  es: {
-    title: "Motor MCN",
-    home: "Inicio",
-    profile: "Perfil",
-    messages: "Mensajes",
-    ads: "Anuncios",
-    blog: "Blog",
-    faq: "FAQ",
-    about: "Acerca de",
-    donate: "Donar",
-    admin: "Admin",
-    logout: "Salir",
-    ads_title: "🔥 Anuncios patrocinados",
-    ad1: "🚀 Promociona aquí",
-    ad2: "💰 Compra espacio publicitario",
-    ad3: "📢 Tu anuncio aquí",
-    prices: "📊 Precios en vivo",
-    discover: "📰 Descubrir"
-  },
-
-  ig: {
-    title: "MCN Engine",
-    home: "Ụlọ",
-    profile: "Profaịlụ",
-    messages: "Ozi",
-    ads: "Mgbasa ozi",
-    blog: "Blog",
-    faq: "Ajụjụ",
-    about: "Banyere",
-    donate: "Nye",
-    admin: "Admin",
-    logout: "Pụọ",
-    ads_title: "🔥 Mgbasa ozi",
-    ad1: "🚀 Tinye mgbasa ozi gị",
-    ad2: "💰 Zụta oghere",
-    ad3: "📢 Mgbasa ozi gị",
-    prices: "📊 Ọnụ ahịa ndụ",
-    discover: "📰 Chọpụta"
-  }
+/* ================= MENU TOGGLE FIX ================= */
+window.toggleMenu = function () {
+  document.getElementById("menu").classList.toggle("active");
 };
 
-function applyLang(lang){
-  localStorage.setItem("lang", lang);
-
-  document.querySelectorAll("[data-i18n]").forEach(el=>{
-    const key = el.getAttribute("data-i18n");
-    if(translations[lang]?.[key]){
-      el.innerText = translations[lang][key];
-    }
-  });
-}
-
-function setLang(lang){
-  applyLang(lang);
-}
-
-/* apply saved language */
-window.addEventListener("load", ()=>{
-  const saved = localStorage.getItem("lang") || "en";
-  applyLang(saved);
-});
-</script>
-
-<script>
-function toggleMenu(){
-  document.getElementById("menu").classList.toggle("active");
-}
-</script>
-
-<script>
-/* ================= BLOG FIX ================= */
-
-function applyBlogLang(){
-  const lang = localStorage.getItem("lang") || "en";
-
-  document.querySelectorAll("#discoverBox .card").forEach(card=>{
-    if(!card.querySelector(".read-more")){
-      const div = document.createElement("div");
-      div.className = "read-more";
-      div.innerText = "Read more";
-      card.appendChild(div);
-    }
-  });
-}
-
-async function loadDiscover(){
+/* ================= DISCOVER SAFE LOAD ================= */
+async function loadDiscover() {
   const box = document.getElementById("discoverBox");
 
   try {
     const res = await fetch("https://mxm-backend.onrender.com/blog/list");
-
-    if(!res.ok) throw new Error();
+    if (!res.ok) throw new Error("404");
 
     const data = await res.json();
 
     box.innerHTML = "";
 
-    data.forEach(post=>{
+    data.forEach(post => {
       box.innerHTML += `
         <div class="card" onclick="openPost('${post.id}')">
           ${post.image ? `<img src="${post.image}">` : ""}
           <div>
-            <b>${post.title}</b>
-            <p>${(post.content || "").substring(0,120)}...</p>
+            <b style="color:#5bc0be">${post.title}</b>
+            <p style="font-size:12px;opacity:0.8">
+              ${(post.content || "").substring(0,120)}...
+            </p>
           </div>
         </div>
       `;
     });
 
-    applyBlogLang();
-    return true;
-
-  } catch(e){
-    box.innerHTML = "⚠️ Discover unavailable";
-    return false;
+  } catch (e) {
+    box.innerHTML = "Discover unavailable";
   }
 }
 
-function openPost(id){
-  window.location.href = "blog/post.html?id=" + id;
+function openPost(id) {
+  location.href = "blog/post.html?id=" + encodeURIComponent(id);
 }
 
 loadDiscover();
+
 </script>
 
 </body>
