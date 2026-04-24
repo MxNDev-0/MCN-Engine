@@ -18,7 +18,7 @@ onAuthStateChanged(auth, async (user) => {
     alert("Access denied");
     location.href = "dashboard.html";
   } else {
-    log("✅ Admin authenticated");
+    log("Admin logged in");
   }
 });
 
@@ -40,38 +40,29 @@ window.createBlog = async () => {
 
   if (!title || !content) return alert("Fill fields");
 
-  try {
-    const res = await fetch("https://mxm-backend.onrender.com/blog/create", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ title, content, image })
-    });
+  const res = await fetch("https://mxm-backend.onrender.com/blog/create", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ title, content, image })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (data.success) {
-      alert("Blog posted ✅");
+  if (data.success) {
+    alert("Blog posted ✅");
 
-      blogTitle.value = "";
-      blogContent.value = "";
-      blogImage.value = "";
+    // CLEAR FORM FIX
+    blogTitle.value = "";
+    blogContent.value = "";
+    blogImage.value = "";
 
-      log("📝 Blog created: " + title);
-    } else {
-      alert("Failed to post blog");
-      log("❌ Blog failed");
-    }
-
-  } catch (err) {
-    console.error(err);
-    log("❌ Blog error");
+    log("Blog created: " + title);
   }
 };
 
 /* ================= AD REQUESTS ================= */
 function loadAdRequests() {
   const box = document.getElementById("upgradeList");
-  if (!box) return;
 
   onSnapshot(collection(db, "adRequests"), (snap) => {
     box.innerHTML = "";
@@ -81,44 +72,20 @@ function loadAdRequests() {
 
       box.innerHTML += `
         <div class="item">
-          ${ad.title || "No title"}<br>
+          ${ad.title}<br>
           Status: ${ad.status || "pending"}<br>
-
-          <button onclick="approveAd('${d.id}')">Approve</button>
-          <button onclick="rejectAd('${d.id}')">Reject</button>
+          Created: ${ad.createdAt || "unknown"}
         </div>
       `;
     });
 
-    const stat = document.getElementById("statRequests");
-    if (stat) stat.innerText = snap.size;
+    document.getElementById("statRequests").innerText = snap.size;
   });
-
-  log("📢 Ad requests loaded");
 }
-
-/* ================= APPROVE ================= */
-window.approveAd = async (id) => {
-  await updateDoc(doc(db, "adRequests", id), {
-    status: "approved"
-  });
-
-  log("✅ Ad approved");
-};
-
-/* ================= REJECT ================= */
-window.rejectAd = async (id) => {
-  await updateDoc(doc(db, "adRequests", id), {
-    status: "rejected"
-  });
-
-  log("❌ Ad rejected");
-};
 
 /* ================= USERS ================= */
 function loadUsers() {
   const box = document.getElementById("usersList");
-  if (!box) return;
 
   onSnapshot(collection(db, "onlineUsers"), (snap) => {
     box.innerHTML = "";
@@ -127,23 +94,17 @@ function loadUsers() {
       const u = d.data();
 
       box.innerHTML += `
-        <div class="item">
-          ${u.email || "user"}
-        </div>
+        <div class="item">${u.email || "user"}</div>
       `;
     });
 
-    const stat = document.getElementById("statUsers");
-    if (stat) stat.innerText = snap.size;
+    document.getElementById("statUsers").innerText = snap.size;
   });
-
-  log("👥 Users loaded");
 }
 
 /* ================= POSTS ================= */
 function loadPosts() {
   const box = document.getElementById("postsList");
-  if (!box) return;
 
   onSnapshot(query(collection(db, "posts"), orderBy("time")), (snap) => {
     box.innerHTML = "";
@@ -159,17 +120,13 @@ function loadPosts() {
       `;
     });
   });
-
-  log("💬 Posts loaded");
 }
 
-/* ================= DELETE ================= */
 window.deletePost = async (id) => {
   await deleteDoc(doc(db, "posts", id));
-  log("🗑 Post deleted");
+  log("Post deleted");
 };
 
-/* ================= CLEAR ================= */
 window.clearAllPosts = async () => {
   const snap = await getDocs(collection(db, "posts"));
   const batch = writeBatch(db);
@@ -177,8 +134,28 @@ window.clearAllPosts = async () => {
   snap.forEach(d => batch.delete(d.ref));
 
   await batch.commit();
-  log("🔥 All posts cleared");
+  log("All posts cleared");
 };
+
+/* ================= SUGGESTIONS PANEL (NEW REPLACEMENT) ================= */
+function loadSuggestions() {
+  const box = document.getElementById("suggestionsBox");
+  if (!box) return;
+
+  onSnapshot(collection(db, "suggestions"), (snap) => {
+    box.innerHTML = "";
+
+    snap.forEach(d => {
+      const s = d.data();
+
+      box.innerHTML += `
+        <div class="item">
+          💡 ${s.text || "No text"}
+        </div>
+      `;
+    });
+  });
+}
 
 /* ================= ANALYTICS ================= */
 window.loadStats = async () => {
@@ -191,12 +168,11 @@ window.loadStats = async () => {
   document.getElementById("statViews").innerText = blogs.size;
   document.getElementById("statClicks").innerText = clicks;
 
-  log("📊 Stats updated");
+  log("Stats refreshed");
 };
 
 /* ================= INIT ================= */
 loadUsers();
 loadPosts();
 loadAdRequests();
-
-log("🚀 Admin system ready");
+loadSuggestions();
