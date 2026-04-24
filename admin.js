@@ -2,15 +2,10 @@ import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
-  doc, addDoc, collection,
+  doc, setDoc, addDoc, collection,
   onSnapshot, deleteDoc, updateDoc,
   query, orderBy, getDocs, writeBatch, getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-/* ================= EMAILJS INIT ================= */
-import emailjs from "https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.esm.min.js";
-
-emailjs.init("X26w77fp9rDGN2et7");
 
 /* ================= ADMIN GUARD ================= */
 onAuthStateChanged(auth, async (user) => {
@@ -37,26 +32,11 @@ function log(msg) {
   box.scrollTop = box.scrollHeight;
 }
 
-/* ================= EMAIL ================= */
-function sendEmail(message) {
-  emailjs.send("service_faxlkup", "template_0f9tfzw", {
-    name: "MCN Engine",
-    email: "mcnengine@gmail.com",
-    message: message,
-    time: new Date().toLocaleString()
-  }).then(() => {
-    log("📩 Email sent");
-  }).catch(err => {
-    console.error(err);
-    log("❌ Email failed");
-  });
-}
-
 /* ================= BLOG ================= */
 window.createBlog = async () => {
-  const title = document.getElementById("blogTitle").value;
-  const content = document.getElementById("blogContent").value;
-  const image = document.getElementById("blogImage").value;
+  const title = blogTitle.value;
+  const content = blogContent.value;
+  const image = blogImage.value;
 
   if (!title || !content) return alert("Fill fields");
 
@@ -72,14 +52,14 @@ window.createBlog = async () => {
     if (data.success) {
       alert("Blog posted ✅");
 
-      document.getElementById("blogTitle").value = "";
-      document.getElementById("blogContent").value = "";
-      document.getElementById("blogImage").value = "";
+      blogTitle.value = "";
+      blogContent.value = "";
+      blogImage.value = "";
 
       log("📝 Blog created: " + title);
-      sendEmail("New blog created: " + title);
     } else {
       alert("Failed to post blog");
+      log("❌ Blog failed");
     }
 
   } catch (err) {
@@ -91,6 +71,7 @@ window.createBlog = async () => {
 /* ================= AD REQUESTS ================= */
 function loadAdRequests() {
   const box = document.getElementById("upgradeList");
+  if (!box) return;
 
   onSnapshot(collection(db, "adRequests"), (snap) => {
     box.innerHTML = "";
@@ -123,7 +104,6 @@ window.approveAd = async (id) => {
   });
 
   log("✅ Ad approved");
-  sendEmail("Ad request approved");
 };
 
 /* ================= REJECT ================= */
@@ -133,12 +113,12 @@ window.rejectAd = async (id) => {
   });
 
   log("❌ Ad rejected");
-  sendEmail("Ad request rejected");
 };
 
 /* ================= USERS ================= */
 function loadUsers() {
   const box = document.getElementById("usersList");
+  if (!box) return;
 
   onSnapshot(collection(db, "onlineUsers"), (snap) => {
     box.innerHTML = "";
@@ -150,3 +130,73 @@ function loadUsers() {
         <div class="item">
           ${u.email || "user"}
         </div>
+      `;
+    });
+
+    const stat = document.getElementById("statUsers");
+    if (stat) stat.innerText = snap.size;
+  });
+
+  log("👥 Users loaded");
+}
+
+/* ================= POSTS ================= */
+function loadPosts() {
+  const box = document.getElementById("postsList");
+  if (!box) return;
+
+  onSnapshot(query(collection(db, "posts"), orderBy("time")), (snap) => {
+    box.innerHTML = "";
+
+    snap.forEach(d => {
+      const p = d.data();
+
+      box.innerHTML += `
+        <div class="item">
+          ${p.text}
+          <button onclick="deletePost('${d.id}')">Delete</button>
+        </div>
+      `;
+    });
+  });
+
+  log("💬 Posts loaded");
+}
+
+/* ================= DELETE ================= */
+window.deletePost = async (id) => {
+  await deleteDoc(doc(db, "posts", id));
+  log("🗑 Post deleted");
+};
+
+/* ================= CLEAR ================= */
+window.clearAllPosts = async () => {
+  const snap = await getDocs(collection(db, "posts"));
+  const batch = writeBatch(db);
+
+  snap.forEach(d => batch.delete(d.ref));
+
+  await batch.commit();
+  log("🔥 All posts cleared");
+};
+
+/* ================= ANALYTICS ================= */
+window.loadStats = async () => {
+  const blogs = await getDocs(collection(db, "blogs"));
+  const ads = await getDocs(collection(db, "ads"));
+
+  let clicks = 0;
+  ads.forEach(d => clicks += d.data().clicks || 0);
+
+  document.getElementById("statViews").innerText = blogs.size;
+  document.getElementById("statClicks").innerText = clicks;
+
+  log("📊 Stats updated");
+};
+
+/* ================= INIT ================= */
+loadUsers();
+loadPosts();
+loadAdRequests();
+
+log("🚀 Admin system ready");
