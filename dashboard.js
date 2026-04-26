@@ -24,6 +24,55 @@ let userData = null;
 let lastBTC = null;
 let lastETH = null;
 
+/* ================= MONITOR LOGGER ================= */
+function monitorLog(msg) {
+  const box = document.getElementById("monitor");
+  if (!box) return;
+
+  const time = new Date().toLocaleTimeString();
+
+  const line = document.createElement("div");
+  line.textContent = `[${time}] ${msg}`;
+
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ================= CHAT → MONITOR ================= */
+function loadChatToMonitor() {
+  const q = query(
+    collection(db, "chats/messages"),
+    orderBy("timestamp", "asc")
+  );
+
+  onSnapshot(q, (snapshot) => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === "added") {
+        const msg = change.doc.data();
+        monitorLog(`💬 ${msg.username}: ${msg.text}`);
+      }
+    });
+  });
+}
+
+/* ================= SEND MESSAGE ================= */
+window.sendMessage = async () => {
+  const input = document.getElementById("chatInput");
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  await addDoc(collection(db, "chats/messages"), {
+    text,
+    uid: user.uid,
+    username: userData?.username || "User",
+    timestamp: serverTimestamp()
+  });
+
+  input.value = "";
+};
+
 /* AUTH */
 onAuthStateChanged(auth, async (u) => {
   if (!u) return location.href = "index.html";
@@ -35,7 +84,8 @@ onAuthStateChanged(auth, async (u) => {
 
   loadPrices();
   loadNotifications();
-  loadBroadcasts(); // ✅ NEW
+  loadBroadcasts();
+  loadChatToMonitor(); // ✅ CHAT IN MONITOR
   startLiveSystem();
 });
 
@@ -58,7 +108,7 @@ async function loadUser() {
   if (snap.exists()) userData = snap.data();
 }
 
-/* ================= BROADCAST SYSTEM (NEW) ================= */
+/* ================= BROADCAST ================= */
 function loadBroadcasts() {
   const box = document.getElementById("broadcastBox");
   if (!box) return;
@@ -85,7 +135,7 @@ function loadBroadcasts() {
   });
 }
 
-/* PRICES + LIVE UPDATE SYSTEM */
+/* PRICES */
 async function loadPrices() {
   const box = document.getElementById("priceBox");
 
@@ -119,7 +169,7 @@ function checkPriceChange(data) {
   lastETH = data.ethereum.usd;
 }
 
-/* LIVE LOOP */
+/* LOOP */
 function startLiveSystem() {
   setInterval(loadPrices, 30000);
 }
@@ -141,12 +191,8 @@ function loadNotifications() {
 
     panel.innerHTML = html;
 
-    if (count > 0) {
-      badge.style.display = "inline-block";
-      badge.innerText = count;
-    } else {
-      badge.style.display = "none";
-    }
+    badge.style.display = count > 0 ? "inline-block" : "none";
+    badge.innerText = count;
   });
 }
 
@@ -159,36 +205,10 @@ async function sendNotification(text) {
   });
 }
 
-/* MENU */
-window.toggleMenu = function () {
-  document.getElementById("menu").classList.toggle("active");
-};
+/* NAV */
+window.toggleMenu = () => document.getElementById("menu").classList.toggle("active");
 
-window.logout = async function () {
+window.logout = async () => {
   await signOut(auth);
   location.href = "index.html";
 };
-
-/* NAV */
-window.goHome = () => location.href = "dashboard.html";
-window.goProfile = () => location.href = "profile.html";
-window.goMessages = () => location.href = "messages.html";
-window.goAdSpace = () => location.href = "ads.html";
-window.goBlog = () => location.href = "blog/index.html";
-window.goFaq = () => location.href = "faq.html";
-window.goAbout = () => location.href = "about.html";
-window.goAdmin = () => {
-  if (!userData || userData.role !== "admin") return alert("Admin only");
-  location.href = "admin.html";
-};
-
-/* ADS SLIDER FIX */
-let currentAd = 0;
-
-setInterval(() => {
-  const slider = document.getElementById("adsSlider");
-  if (!slider) return;
-
-  currentAd = (currentAd + 1) % slider.children.length;
-  slider.style.transform = `translateX(-${currentAd * 100}%)`;
-}, 3000);
