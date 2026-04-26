@@ -22,11 +22,10 @@ import {
 /* ================= GLOBAL STATE ================= */
 let user = null;
 let userData = null;
-
-window.userData = null; // 🔥 IMPORTANT (fix menu role check)
-
 let lastBTC = null;
 let lastETH = null;
+
+window.userData = null;
 
 /* ================= AUTH ================= */
 onAuthStateChanged(auth, async (u) => {
@@ -40,9 +39,10 @@ onAuthStateChanged(auth, async (u) => {
   loadPrices();
   loadNotifications();
   loadBroadcasts();
+  loadChat();
   startLiveSystem();
 
-  console.log("✅ Dashboard ready");
+  console.log("Dashboard ready");
 });
 
 /* ================= USER ================= */
@@ -61,10 +61,9 @@ async function ensureUser() {
 
 async function loadUser() {
   const snap = await getDoc(doc(db, "users", user.uid));
-
   if (snap.exists()) {
     userData = snap.data();
-    window.userData = userData; // 🔥 CRITICAL FIX
+    window.userData = userData;
   }
 }
 
@@ -83,12 +82,12 @@ function loadBroadcasts() {
     box.innerHTML = "";
 
     snapshot.forEach(doc => {
-      const data = doc.data();
+      const d = doc.data();
 
       box.innerHTML += `
         <div class="item">
-          <b>🔔 ${data.title}</b><br>
-          ${data.message}
+          🔔 <b>${d.title}</b><br>
+          ${d.message}
         </div>
       `;
     });
@@ -98,6 +97,7 @@ function loadBroadcasts() {
 /* ================= PRICES ================= */
 async function loadPrices() {
   const box = document.getElementById("priceBox");
+  if (!box) return;
 
   try {
     const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd");
@@ -108,28 +108,11 @@ async function loadPrices() {
       ETH: $${data.ethereum.usd}
     `;
 
-    checkPriceChange(data);
-
   } catch {
     box.innerText = "Failed to load prices";
   }
 }
 
-function checkPriceChange(data) {
-  if (lastBTC && lastETH) {
-    if (data.bitcoin.usd !== lastBTC) {
-      sendNotification("BTC price changed!");
-    }
-    if (data.ethereum.usd !== lastETH) {
-      sendNotification("ETH price changed!");
-    }
-  }
-
-  lastBTC = data.bitcoin.usd;
-  lastETH = data.ethereum.usd;
-}
-
-/* ================= LIVE LOOP ================= */
 function startLiveSystem() {
   setInterval(loadPrices, 30000);
 }
@@ -137,78 +120,79 @@ function startLiveSystem() {
 /* ================= NOTIFICATIONS ================= */
 function loadNotifications() {
   const panel = document.getElementById("notifPanel");
-  const badge = document.getElementById("notifCount");
-
   if (!panel) return;
 
   onSnapshot(collection(db, "notifications", user.uid, "items"), (snap) => {
-    let count = 0;
     let html = "";
 
     snap.forEach(d => {
-      const n = d.data();
-      if (!n.seen) count++;
-      html += `<div>🔔 ${n.text}</div>`;
+      html += `<div>🔔 ${d.data().text}</div>`;
     });
 
     panel.innerHTML = html;
-
-    if (badge) {
-      if (count > 0) {
-        badge.style.display = "inline-block";
-        badge.innerText = count;
-      } else {
-        badge.style.display = "none";
-      }
-    }
   });
 }
 
-/* ================= SEND NOTIFICATION ================= */
-async function sendNotification(text) {
-  await addDoc(collection(db, "notifications", user.uid, "items"), {
-    text,
-    seen: false,
-    createdAt: serverTimestamp()
+/* ================= CHAT SYSTEM ================= */
+window.sendChat = async () => {
+  const input = document.getElementById("chatInput");
+  if (!input || !input.value.trim()) return;
+
+  try {
+    await addDoc(collection(db, "chats"), {
+      text: input.value,
+      uid: user.uid,
+      username: userData?.username || user.email,
+      createdAt: serverTimestamp()
+    });
+
+    input.value = "";
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+function loadChat() {
+  const box = document.getElementById("chatBox");
+  if (!box) return;
+
+  onSnapshot(collection(db, "chats"), (snap) => {
+    box.innerHTML = "";
+
+    snap.forEach(doc => {
+      const m = doc.data();
+
+      box.innerHTML += `
+        <div class="item">
+          <b>${m.username}</b><br>
+          ${m.text}
+        </div>
+      `;
+    });
+
+    box.scrollTop = box.scrollHeight;
   });
 }
 
-/* ================= MENU (GLOBAL FIX) ================= */
+/* ================= MENU FIX ================= */
 window.toggleMenu = function () {
-  const menu = document.getElementById("menu");
-  if (menu) menu.classList.toggle("active");
+  document.getElementById("menu")?.classList.toggle("active");
 };
 
-/* ================= NAVIGATION (GLOBAL FIX) ================= */
-window.goHome = function () {
-  location.href = "dashboard.html";
+window.logout = async function () {
+  await signOut(auth);
+  location.href = "index.html";
 };
 
-window.goProfile = function () {
-  location.href = "profile.html";
-};
-
-window.goMessages = function () {
-  location.href = "messages.html";
-};
-
-window.goAdSpace = function () {
-  location.href = "ads.html";
-};
-
-window.goBlog = function () {
-  location.href = "blog/index.html";
-};
-
-window.goFaq = function () {
-  location.href = "faq.html";
-};
-
-window.goAbout = function () {
-  location.href = "about.html";
-};
-
-window.goAdmin = function () {
+/* ================= NAVIGATION FIX ================= */
+window.goHome = () => location.href = "dashboard.html";
+window.goProfile = () => location.href = "profile.html";
+window.goMessages = () => location.href = "messages.html";
+window.goAdSpace = () => location.href = "ads.html";
+window.goBlog = () => location.href = "blog/index.html";
+window.goFaq = () => location.href = "faq.html";
+window.goAbout = () => location.href = "about.html";
+window.goAdmin = () => {
   if (!window.userData || window.userData.role !== "admin") {
     alert("Admin only");
     return;
@@ -216,18 +200,12 @@ window.goAdmin = function () {
   location.href = "admin.html";
 };
 
-/* ================= LOGOUT ================= */
-window.logout = async function () {
-  await signOut(auth);
-  location.href = "index.html";
-};
-
-/* ================= ADS SLIDER ================= */
+/* ================= ADS ================= */
 let currentAd = 0;
 
 setInterval(() => {
   const slider = document.getElementById("adsSlider");
-  if (!slider || !slider.children.length) return;
+  if (!slider) return;
 
   currentAd = (currentAd + 1) % slider.children.length;
   slider.style.transform = `translateX(-${currentAd * 100}%)`;
