@@ -38,16 +38,17 @@
       border-radius: 10px;
     }
 
+    /* ✅ MONITOR (NO DESIGN CHANGE, ONLY IMPROVEMENTS) */
     .monitor {
       background: #000;
-      color: #0f0;
+      color: #fff; /* changed from green */
+      font-size: 13px; /* slightly reduced */
       height: 120px;
       overflow-y: auto;
       font-family: monospace;
       padding: 10px;
       border-radius: 12px;
       margin: 10px;
-      cursor: pointer; /* 🔥 added for chat activation */
     }
 
     .profile-header {
@@ -57,6 +58,13 @@
       margin: 10px;
       padding: 10px;
       border-radius: 12px;
+      animation: glow 2s infinite alternate;
+    }
+
+    /* ✅ ALIVE EFFECT */
+    @keyframes glow {
+      from { box-shadow: 0 0 5px #5bc0be; }
+      to { box-shadow: 0 0 15px #5bc0be; }
     }
 
     .avatar {
@@ -79,6 +87,28 @@
       border-radius: 12px;
     }
 
+    /* ✅ CHAT INPUT FIX */
+    .chat-row {
+      display: flex;
+      gap: 6px;
+      margin: 10px;
+    }
+
+    .chat-row input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    .chat-row button {
+      width: 80px; /* pushed to right */
+      border-radius: 8px;
+      border: none;
+      background: #5bc0be;
+      font-weight: bold;
+    }
+
     .popup {
       display: none;
       position: fixed;
@@ -89,37 +119,17 @@
       padding: 12px;
       border-radius: 12px;
     }
-
-    /* 🔥 CHAT INPUT BOX */
-    #chatInputBox {
-      display: none;
-      margin: 10px;
-    }
-
-    #chatInput {
-      width: 70%;
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-    }
-
-    #chatInputBox button {
-      padding: 8px 12px;
-      margin-left: 5px;
-    }
   </style>
 </head>
 
 <body>
 
-<!-- NAV -->
 <div class="navbar">
   <button class="icon-btn" onclick="location.href='dashboard.html'">Back</button>
   <h3>Profile</h3>
   <button class="icon-btn" onclick="toggleMenu()">☰</button>
 </div>
 
-<!-- DROPDOWN MENU -->
 <div id="dropdownMenu">
   <h4 id="usernameDisplay">Loading...</h4>
 
@@ -134,24 +144,22 @@
   <button onclick="openFriends()">👤 Friends</button>
 </div>
 
-<!-- 🔥 MONITOR (NOW CHAT CENTER) -->
-<div id="monitor" class="monitor" onclick="toggleChatInput()">
+<!-- MONITOR -->
+<div id="monitor" class="monitor">
   [SYSTEM] Profile monitor started...
 </div>
 
-<!-- 🔥 CHAT INPUT (HIDDEN UNTIL MONITOR CLICK) -->
-<div id="chatInputBox">
+<!-- ✅ CHAT INPUT FIXED POSITION -->
+<div class="chat-row">
   <input id="chatInput" placeholder="Type message...">
   <button onclick="sendChat()">Send</button>
 </div>
 
-<!-- PROFILE HEADER -->
 <div class="profile-header">
   <div class="avatar"></div>
   <div class="username">User Panel</div>
 </div>
 
-<!-- POPUPS -->
 <div id="requestsPopup" class="popup">
   <h4>Friend Requests</h4>
   <div id="friendRequestsBox"></div>
@@ -164,7 +172,6 @@
   <button onclick="closePopup('friendsPopup')">Close</button>
 </div>
 
-<!-- ACTIVITY -->
 <div class="card">
   <h4>📊 Activity Overview</h4>
   <p>Ad Status: <b id="adStatus">No active ads</b></p>
@@ -174,66 +181,19 @@
 <script type="module" src="profile.js"></script>
 
 <script>
-
-/* ================= MENU ================= */
 function toggleMenu() {
   const menu = document.getElementById("dropdownMenu");
-  if (!menu) return;
-
-  menu.style.display =
-    menu.style.display === "block" ? "none" : "block";
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
 }
 
-/* OUTSIDE CLICK CLOSE */
 document.addEventListener("click", function (e) {
   const menu = document.getElementById("dropdownMenu");
-
-  if (!menu) return;
-
-  if (
-    menu.style.display === "block" &&
-    !menu.contains(e.target) &&
-    !e.target.classList.contains("icon-btn")
-  ) {
+  if (menu.style.display === "block" &&
+      !menu.contains(e.target) &&
+      !e.target.classList.contains("icon-btn")) {
     menu.style.display = "none";
   }
 });
-
-/* ================= MONITOR LOG ================= */
-function log(msg) {
-  const box = document.getElementById("monitor");
-  if (!box) return;
-
-  const time = new Date().toLocaleTimeString();
-  box.innerHTML += `<br>[${time}] ${msg}`;
-  box.scrollTop = box.scrollHeight;
-}
-
-/* ================= CHAT TOGGLE ================= */
-function toggleChatInput() {
-  const box = document.getElementById("chatInputBox");
-  if (!box) return;
-
-  box.style.display = box.style.display === "block" ? "none" : "block";
-}
-
-/* SAMPLE LOGS */
-setTimeout(() => log("Welcome to your profile"), 1000);
-setTimeout(() => log("System ready"), 2000);
-
-/* POPUPS */
-function openRequests(){
-  document.getElementById("requestsPopup").style.display = "block";
-}
-
-function openFriends(){
-  document.getElementById("friendsPopup").style.display = "block";
-}
-
-function closePopup(id){
-  document.getElementById(id).style.display = "none";
-}
-
 </script>
 
 </body>
