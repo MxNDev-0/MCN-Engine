@@ -30,7 +30,6 @@
       cursor: pointer;
     }
 
-    /* 🔥 DROPDOWN MENU */
     #dropdownMenu {
       display: none;
       padding: 10px;
@@ -39,7 +38,6 @@
       border-radius: 10px;
     }
 
-    /* 🔥 MONITOR */
     .monitor {
       background: #000;
       color: #0f0;
@@ -49,6 +47,7 @@
       padding: 10px;
       border-radius: 12px;
       margin: 10px;
+      cursor: pointer; /* 🔥 added for chat activation */
     }
 
     .profile-header {
@@ -90,6 +89,24 @@
       padding: 12px;
       border-radius: 12px;
     }
+
+    /* 🔥 CHAT INPUT BOX */
+    #chatInputBox {
+      display: none;
+      margin: 10px;
+    }
+
+    #chatInput {
+      width: 70%;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    #chatInputBox button {
+      padding: 8px 12px;
+      margin-left: 5px;
+    }
   </style>
 </head>
 
@@ -102,7 +119,7 @@
   <button class="icon-btn" onclick="toggleMenu()">☰</button>
 </div>
 
-<!-- 🔥 DROPDOWN MENU -->
+<!-- DROPDOWN MENU -->
 <div id="dropdownMenu">
   <h4 id="usernameDisplay">Loading...</h4>
 
@@ -117,9 +134,15 @@
   <button onclick="openFriends()">👤 Friends</button>
 </div>
 
-<!-- 🔥 MONITOR (MOVED TO TOP) -->
-<div id="monitor" class="monitor">
+<!-- 🔥 MONITOR (NOW CHAT CENTER) -->
+<div id="monitor" class="monitor" onclick="toggleChatInput()">
   [SYSTEM] Profile monitor started...
+</div>
+
+<!-- 🔥 CHAT INPUT (HIDDEN UNTIL MONITOR CLICK) -->
+<div id="chatInputBox">
+  <input id="chatInput" placeholder="Type message...">
+  <button onclick="sendChat()">Send</button>
 </div>
 
 <!-- PROFILE HEADER -->
@@ -141,7 +164,7 @@
   <button onclick="closePopup('friendsPopup')">Close</button>
 </div>
 
-<!-- 🔥 NEW SECTION UNDER MONITOR -->
+<!-- ACTIVITY -->
 <div class="card">
   <h4>📊 Activity Overview</h4>
   <p>Ad Status: <b id="adStatus">No active ads</b></p>
@@ -152,17 +175,16 @@
 
 <script>
 
-/* ================= MENU FIX ================= */
+/* ================= MENU ================= */
 function toggleMenu() {
   const menu = document.getElementById("dropdownMenu");
-
   if (!menu) return;
 
   menu.style.display =
     menu.style.display === "block" ? "none" : "block";
 }
 
-/* CLOSE MENU OUTSIDE CLICK */
+/* OUTSIDE CLICK CLOSE */
 document.addEventListener("click", function (e) {
   const menu = document.getElementById("dropdownMenu");
 
@@ -187,11 +209,19 @@ function log(msg) {
   box.scrollTop = box.scrollHeight;
 }
 
-/* SAMPLE LOGS (YOU WILL CONNECT REAL DATA LATER) */
+/* ================= CHAT TOGGLE ================= */
+function toggleChatInput() {
+  const box = document.getElementById("chatInputBox");
+  if (!box) return;
+
+  box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+/* SAMPLE LOGS */
 setTimeout(() => log("Welcome to your profile"), 1000);
 setTimeout(() => log("System ready"), 2000);
 
-/* ================= POPUPS ================= */
+/* POPUPS */
 function openRequests(){
   document.getElementById("requestsPopup").style.display = "block";
 }
