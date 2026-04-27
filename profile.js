@@ -10,7 +10,6 @@ import {
   addDoc,
   onSnapshot,
   query,
-  orderBy,
   updateDoc,
   doc,
   getDoc,
@@ -21,7 +20,7 @@ import {
 
 let user = null;
 
-/* ================= MONITOR LOG (FIXED) ================= */
+/* ================= MONITOR LOG ================= */
 function log(msg, color = "#fff") {
   const box = document.getElementById("monitor");
   if (!box) return;
@@ -51,18 +50,23 @@ onAuthStateChanged(auth, async (u) => {
   loadFriends();
   loadNotifications();
   monitorAdRequests();
-  loadChat();
-  startCryptoMonitor();
+
+  loadChat();          // ✅ FIXED
+  startCryptoMonitor(); // ✅ FIXED
 });
 
-/* ================= CHAT SYSTEM (MERGED INTO MONITOR) ================= */
+/* ================= CHAT SYSTEM (FIXED) ================= */
 function loadChat() {
-  onSnapshot(query(collection(db, "chats"), orderBy("createdAt")), (snap) => {
+  const q = query(collection(db, "chats")); // ❌ removed orderBy
+
+  onSnapshot(q, (snap) => {
     snap.docChanges().forEach(change => {
       if (change.type === "added") {
         const m = change.doc.data();
 
-        log(`💬 <b>${m.username}</b>: ${m.text}`, "#5bc0be");
+        if (!m.text) return;
+
+        log(`💬 <b>${m.username || "User"}</b>: ${m.text}`, "#5bc0be");
       }
     });
   });
@@ -76,13 +80,13 @@ window.sendChat = async function () {
     text: input.value,
     uid: user.uid,
     username: user.email.split("@")[0],
-    createdAt: serverTimestamp()
+    createdAt: Date.now() // ✅ FIXED (no more null timestamp issue)
   });
 
   input.value = "";
 };
 
-/* ================= CRYPTO LIVE MONITOR ================= */
+/* ================= CRYPTO MONITOR (FIXED) ================= */
 let lastBTC = null;
 let lastETH = null;
 
@@ -90,6 +94,11 @@ async function fetchCrypto() {
   try {
     const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd,ngn");
     const data = await res.json();
+
+    if (!data.bitcoin || !data.ethereum) {
+      log("Crypto data unavailable", "#ff4d4d");
+      return;
+    }
 
     const btc = data.bitcoin.usd;
     const eth = data.ethereum.usd;
@@ -99,10 +108,7 @@ async function fetchCrypto() {
       const arrow = btc > lastBTC ? "🔺" : btc < lastBTC ? "🔻" : "⏺";
       const color = btc > lastBTC ? "#00ff88" : btc < lastBTC ? "#ff4d4d" : "#aaa";
 
-      log(
-        `BTC ${arrow} $${btc.toLocaleString()} (from $${lastBTC.toLocaleString()})`,
-        color
-      );
+      log(`BTC ${arrow} $${btc.toLocaleString()} (from $${lastBTC.toLocaleString()})`, color);
     } else {
       log(`BTC → $${btc.toLocaleString()} | ₦${data.bitcoin.ngn.toLocaleString()}`, "#ccc");
     }
@@ -112,10 +118,7 @@ async function fetchCrypto() {
       const arrow = eth > lastETH ? "🔺" : eth < lastETH ? "🔻" : "⏺";
       const color = eth > lastETH ? "#00ff88" : eth < lastETH ? "#ff4d4d" : "#aaa";
 
-      log(
-        `ETH ${arrow} $${eth.toLocaleString()} (from $${lastETH.toLocaleString()})`,
-        color
-      );
+      log(`ETH ${arrow} $${eth.toLocaleString()} (from $${lastETH.toLocaleString()})`, color);
     } else {
       log(`ETH → $${eth.toLocaleString()} | ₦${data.ethereum.ngn.toLocaleString()}`, "#ccc");
     }
@@ -129,6 +132,7 @@ async function fetchCrypto() {
 }
 
 function startCryptoMonitor() {
+  log("Crypto monitor started");
   fetchCrypto();
   setInterval(fetchCrypto, 30000);
 }
@@ -172,7 +176,7 @@ window.resetPassword = async () => {
 function loadNotifications() {
   const ref = collection(db, "notifications", user.uid, "items");
 
-  onSnapshot(query(ref, orderBy("createdAt", "desc")), (snap) => {
+  onSnapshot(ref, (snap) => {
     snap.docChanges().forEach(change => {
       if (change.type === "added") {
         const data = change.doc.data();
@@ -224,7 +228,7 @@ window.sendFriendRequest = async function (toUid, toName) {
     to: toUid,
     toName,
     status: "pending",
-    createdAt: serverTimestamp()
+    createdAt: Date.now()
   });
 
   log("Friend request sent");
