@@ -31,7 +31,7 @@ function log(msg) {
   box.scrollTop = box.scrollHeight;
 }
 
-/* ================= CHAT UI TOGGLE ================= */
+/* ================= CHAT TOGGLE ================= */
 window.toggleChatInput = function () {
   const box = document.getElementById("chatInputBox");
   if (!box) return;
@@ -50,7 +50,7 @@ onAuthStateChanged(auth, async (u) => {
   loadUsername();
   loadFriendRequests();
   loadFriends();
-  loadChat(); // 🔥 CHAT ENABLED IN PROFILE MONITOR
+  loadChat(); // 🔥 CHAT ENABLED IN MONITOR
   loadNotifications();
   monitorAdRequests();
 });
@@ -90,7 +90,7 @@ window.resetPassword = async () => {
   log("Password reset email sent");
 };
 
-/* ================= 🔥 CHAT SYSTEM (PROFILE MONITOR MERGED) ================= */
+/* ================= CHAT SYSTEM ================= */
 window.sendChat = async () => {
   const input = document.getElementById("chatInput");
 
@@ -103,7 +103,6 @@ window.sendChat = async () => {
     createdAt: serverTimestamp()
   });
 
-  log("You: " + input.value);
   input.value = "";
 };
 
@@ -172,7 +171,7 @@ function monitorAdRequests() {
   });
 }
 
-/* ================= FRIEND SYSTEM (UNCHANGED) ================= */
+/* ================= FRIEND SYSTEM ================= */
 window.sendFriendRequest = async function (toUid, toName) {
   if (!user || user.uid === toUid) return;
 
